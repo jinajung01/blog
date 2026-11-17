@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>작은 기능부터 프로토타입으로 검증하는 법 - 내 블로그</title>
+  <title>글 - 내 블로그</title>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
@@ -27,48 +27,31 @@
 
   <main class="post-main">
     <nav class="crumb" aria-label="현재 위치">
-      <a href="index.html">홈</a><span aria-hidden="true">/</span><a href="posts.html?cat=plan" data-post-crumb>기획</a>
+      <a href="index.html">홈</a><span aria-hidden="true">/</span><a href="posts.html" data-post-crumb>글 목록</a>
     </nav>
 
     <section class="post-head">
-      <span class="eyebrow" data-post-cat>기획</span>
-      <h1 data-post-title>작은 기능부터 프로토타입으로 검증하는 법</h1>
+      <span class="eyebrow" data-post-cat></span>
+      <h1 data-post-title>글을 불러오는 중…</h1>
       <div class="byline">
         <span class="avatar" aria-hidden="true"></span>
         <div>
           <strong>[작성자 이름]</strong>
-          <span data-post-meta>2026.11.15 · 6분 읽기</span>
+          <span data-post-meta></span>
         </div>
       </div>
     </section>
 
-    <div class="post-cover placeholder tint-plan" data-post-cover>대표 이미지</div>
+    <div class="post-cover placeholder" data-post-cover>대표 이미지</div>
 
-    <article class="article" data-post-body>
-      <p>기획 문서를 완벽하게 쓰고 나서 화면을 만들면, 막상 사용자가 써 보는 순간 문서의 절반이 바뀌곤 합니다. 그래서 요즘은 핵심 기능 하나만 골라 화면 한 장으로 먼저 보여주고, 반응을 본 뒤에 문서를 채웁니다.</p>
-      <h2>1. 검증할 질문을 한 문장으로 정한다</h2>
-      <p>"사용자가 이 버튼을 찾을 수 있는가"처럼 답이 예·아니오로 나오는 질문이 좋습니다. 질문이 흐리면 프로토타입도 흐려집니다.</p>
-      <blockquote>프로토타입은 답을 보여주는 도구가 아니라, 질문을 확인하는 도구다.</blockquote>
-      <h2>2. 화면은 필요한 만큼만 만든다</h2>
-      <ul>
-        <li>질문에 답하는 데 필요한 화면만 만든다</li>
-        <li>실제 문구를 쓴다 — 더미 텍스트는 반응을 흐린다</li>
-        <li>다음 화면으로 가는 링크는 실제로 동작하게 둔다</li>
-      </ul>
-      <h2>3. 본 것과 해석을 나눠 기록한다</h2>
-      <p>테스트가 끝나면 "사용자가 한 행동"과 "내가 내린 해석"을 다른 칸에 적습니다. 문서로 옮길 때 이 구분이 그대로 근거가 됩니다.</p>
-    </article>
+    <article class="article" data-post-body></article>
 
-    <div class="tags" data-post-tags>
-      <a href="posts.html">#프로토타입</a>
-      <a href="posts.html">#PRD</a>
-      <a href="posts.html">#사용자테스트</a>
-    </div>
+    <div class="tags" data-post-tags></div>
 
     <div class="actions">
-      <button type="button" class="action" aria-pressed="false" data-like data-count="12">
+      <button type="button" class="action" aria-pressed="false" data-like>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20.8 4.6a5.5 5.5 0 0 0-7.8 0L12 5.7l-1-1.1a5.5 5.5 0 0 0-7.8 7.8l1 1.1L12 21l7.8-7.5 1-1.1a5.5 5.5 0 0 0 0-7.8z"/></svg>
-        <span>좋아요 12</span>
+        <span>좋아요 0</span>
       </button>
       <button type="button" class="action" data-copy>
         <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M10 13a5 5 0 0 0 7.5.5l3-3a5 5 0 0 0-7-7l-1.7 1.7"/><path d="M14 11a5 5 0 0 0-7.5-.5l-3 3a5 5 0 0 0 7 7l1.7-1.7"/></svg>
@@ -85,35 +68,29 @@
       <a class="btn btn-line" href="index.html#subscribe">구독</a>
     </section>
 
+    <div class="admin-bar" data-admin-bar hidden>
+      <span>관리자 메뉴</span>
+      <a class="btn btn-line" data-edit href="#">수정</a>
+      <button type="button" class="btn btn-danger" data-delete>삭제</button>
+    </div>
+
     <section class="comments" aria-label="댓글">
-      <h2>댓글 <span data-comment-count>2</span></h2>
+      <h2>댓글 <span data-comment-count>0</span></h2>
       <form class="comment-form" data-comment-form>
+        <label for="comment-name">이름</label>
+        <input id="comment-name" class="comment-name" type="text" maxlength="20" placeholder="이름 (비우면 익명)">
         <label for="comment">댓글 작성</label>
-        <textarea id="comment" rows="3" placeholder="생각을 남겨 주세요"></textarea>
+        <textarea id="comment" rows="3" maxlength="1000" placeholder="생각을 남겨 주세요"></textarea>
+        <p class="error" role="alert" data-comment-error hidden></p>
         <button type="submit" class="btn btn-dark">등록</button>
       </form>
-      <div data-comment-list>
-        <div class="comment">
-          <span class="avatar" aria-hidden="true"></span>
-          <div>
-            <div class="who"><strong>독자 A</strong> <span>· 2일 전</span></div>
-            <p>본 것과 해석을 나눠 적는 방법, 바로 써봐야겠어요.</p>
-          </div>
-        </div>
-        <div class="comment">
-          <span class="avatar" aria-hidden="true"></span>
-          <div>
-            <div class="who"><strong>독자 B</strong> <span>· 1일 전</span></div>
-            <p>질문을 한 문장으로 정하는 게 생각보다 어렵더라고요.</p>
-          </div>
-        </div>
-      </div>
+      <div data-comment-list></div>
     </section>
 
     <nav class="post-nav" aria-label="다른 글" data-post-nav>
-      <a href="post.html">
+      <a href="#" data-prev hidden>
         <span>이전 글</span>
-        <strong>회의록을 PRD로 옮길 때 빠지기 쉬운 것들</strong>
+        <strong data-prev-title></strong>
       </a>
       <a href="posts.html">
         <span>목록으로</span>

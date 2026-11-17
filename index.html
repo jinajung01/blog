@@ -40,14 +40,14 @@
     </section>
 
     <div class="wrap home-body">
-      <section class="featured" aria-label="추천 글">
-        <div class="cover placeholder tint-plan">대표 이미지</div>
+      <section class="featured" aria-label="추천 글" data-featured hidden>
+        <a class="cover placeholder" data-f-cover href="#">대표 이미지</a>
         <div class="info">
-          <span class="eyebrow">추천 글 · 기획</span>
-          <h2>작은 기능부터 프로토타입으로 검증하는 법</h2>
-          <p>요구사항 문서를 끝까지 쓰기 전에, 화면 한 장으로 먼저 사용자 반응을 확인하는 과정을 정리했습니다.</p>
-          <span class="meta">2026.11.15 · 6분 읽기</span>
-          <a class="btn btn-line" href="post.html">읽어보기</a>
+          <span class="eyebrow" data-f-cat>추천 글</span>
+          <h2 data-f-title></h2>
+          <p data-f-excerpt></p>
+          <span class="meta" data-f-meta></span>
+          <a class="btn btn-line" data-f-link href="#">읽어보기</a>
         </div>
       </section>
 
@@ -56,47 +56,23 @@
           <h2>최근 글</h2>
           <a class="more-link" href="posts.html">전체 글 보기 →</a>
         </div>
-        <div class="card-grid" data-recent>
-          <a class="post-card" href="post.html">
-            <div class="cover placeholder tint-plan">커버 이미지</div>
-            <div class="body">
-              <span class="eyebrow">기획</span>
-              <h3>회의록을 PRD로 옮길 때 빠지기 쉬운 것들</h3>
-              <span class="meta">2026.11.12 · 5분 읽기</span>
-            </div>
-          </a>
-          <a class="post-card" href="post.html">
-            <div class="cover placeholder tint-design">커버 이미지</div>
-            <div class="body">
-              <span class="eyebrow">디자인</span>
-              <h3>빈 화면(Empty state)도 기획의 일부다</h3>
-              <span class="meta">2026.11.08 · 4분 읽기</span>
-            </div>
-          </a>
-          <a class="post-card" href="post.html">
-            <div class="cover placeholder tint-retro">커버 이미지</div>
-            <div class="body">
-              <span class="eyebrow">회고</span>
-              <h3>첫 챗봇 프로토타입을 만들고 배운 점</h3>
-              <span class="meta">2026.11.03 · 7분 읽기</span>
-            </div>
-          </a>
-        </div>
+        <div class="card-grid" data-recent></div>
+        <p class="empty-note" data-recent-empty hidden>아직 올라온 글이 없어요. 첫 글을 기다려 주세요!</p>
       </section>
 
       <section class="stack" aria-label="카테고리">
         <div class="section-head"><h2>카테고리</h2></div>
         <div class="cat-grid">
           <a class="cat-card tint-plan" href="posts.html?cat=plan">
-            <strong>기획</strong>
+            <strong>기획 <span data-cat-count="plan" class="cat-count"></span></strong>
             <span>문서, 요구사항, 지표 설계 이야기</span>
           </a>
           <a class="cat-card tint-design" href="posts.html?cat=design">
-            <strong>디자인</strong>
+            <strong>디자인 <span data-cat-count="design" class="cat-count"></span></strong>
             <span>화면 구성과 UX 문구 이야기</span>
           </a>
           <a class="cat-card tint-retro" href="posts.html?cat=retro">
-            <strong>회고</strong>
+            <strong>회고 <span data-cat-count="retro" class="cat-count"></span></strong>
             <span>만들고 배운 것을 남기는 기록</span>
           </a>
         </div>
@@ -116,6 +92,7 @@
           <p>이메일로 새 글 소식만 보내드립니다.</p>
         </div>
         <p class="done" data-subscribe-done hidden>구독 신청이 완료되었습니다.</p>
+        <p class="sub-error" role="alert" data-subscribe-error hidden></p>
         <form data-subscribe-form>
           <div class="field">
             <label for="email">이메일</label>
@@ -131,7 +108,6 @@
     <div class="wrap">
       <span>© 2026 내 블로그</span>
       <div class="footer-links">
-        <a href="#">RSS</a>
         <a href="login.html">관리자</a>
       </div>
     </div>

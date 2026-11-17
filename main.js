@@ -1,7 +1,9 @@
 // 블로그 화면 동작
 import {
   configured, adminReady, CATS, isAdmin, currentUser, signInGoogle, signOutNow,
-  listPosts, getPost, savePost, fmtDate, readTime
+  listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
+  listComments, addComment, deleteComment, subscribe, store,
+  compressImage, renderBody, plainText, fmtDate, readTime
 } from './data.js';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
@@ -13,8 +15,9 @@ const el = (tag, cls, text) => {
   return n;
 };
 const params = new URLSearchParams(location.search);
+const PAGE_SIZE = 10;
 
-// 로그인 상태 (설정 전이면 항상 방문자)
+// 로그인 상태
 let user = null;
 try { user = await currentUser(); } catch (e) { console.warn('로그인 확인 실패', e); }
 const admin = isAdmin(user);
@@ -27,8 +30,12 @@ $$('[data-logout]').forEach((b) => b.addEventListener('click', async () => {
   location.href = 'index.html'; // AC-16
 }));
 
-async function safeList() {
-  try { return await listPosts(admin); } catch (e) { console.warn('글 목록을 불러오지 못했어요', e); return []; }
+let postsCache = null;
+async function visiblePosts() {
+  if (!postsCache) {
+    try { postsCache = await listPosts(admin); } catch (e) { console.warn('글 목록을 불러오지 못했어요', e); postsCache = []; }
+  }
+  return postsCache;
 }
 const postHref = (p) => (p.status === 'draft' ? 'write.html?id=' : 'post.html?id=') + encodeURIComponent(p.id);
 const badge = (p) => {
@@ -36,35 +43,92 @@ const badge = (p) => {
   if (p.visibility === 'private') return el('span', 'badge-private', '나만 보기'); // AC-19
   return null;
 };
-const excerpt = (body) => body.replace(/\s+/g, ' ').trim().slice(0, 90);
+const setCover = (node, src) => {
+  if (!src) return node;
+  node.style.backgroundImage = 'url("' + src + '")';
+  node.classList.add('has-image');
+  return node;
+};
+const excerpt = (body) => plainText(body).replace(/\s+/g, ' ').trim().slice(0, 90);
+const catLine = (p, prefix) => {
+  const n = el('span', 'eyebrow', (prefix || '') + (CATS[p.category] || (p.status === 'draft' ? '분류 없음' : '')));
+  const b = badge(p); if (b) n.appendChild(b);
+  return n;
+};
+const coverBox = (cls, p) => setCover(el('div', cls + ' placeholder tint-' + (p.status === 'draft' ? 'draft' : p.category), '커버 이미지'), p.cover);
+const ago = (d) => {
+  const s = (Date.now() - d) / 1000;
+  if (s < 60) return '방금';
+  if (s < 3600) return Math.floor(s / 60) + '분 전';
+  if (s < 86400) return Math.floor(s / 3600) + '시간 전';
+  if (s < 86400 * 7) return Math.floor(s / 86400) + '일 전';
+  return fmtDate(d);
+};
 
-// ---- 첫 화면 ----
+// ================= 첫 화면 =================
 const subForm = $('[data-subscribe-form]');
 if (subForm) {
-  subForm.addEventListener('submit', (e) => {
+  const done = $('[data-subscribe-done]');
+  const err = $('[data-subscribe-error]');
+  if (store.get('blog.subscribed')) { subForm.hidden = true; done.hidden = false; }
+  subForm.addEventListener('submit', async (e) => {
     e.preventDefault();
-    subForm.hidden = true;
-    $('[data-subscribe-done]').hidden = false;
+    const email = $('input', subForm).value.trim().toLowerCase();
+    if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) {
+      err.textContent = '이메일 주소를 확인해 주세요.'; err.hidden = false; return;
+    }
+    err.hidden = true;
+    $('button', subForm).disabled = true;
+    try {
+      const r = await subscribe(email);
+      store.set('blog.subscribed', '1');
+      done.textContent = r === 'already' ? '이미 구독 중인 주소예요.' : '구독 신청이 완료되었습니다.';
+      subForm.hidden = true; done.hidden = false;
+    } catch (ex) {
+      err.textContent = '신청하지 못했어요. 잠시 후 다시 시도해 주세요.'; err.hidden = false;
+      console.warn(ex);
+    }
+    $('button', subForm).disabled = false;
   });
-}
-const recent = $('[data-recent]');
-if (recent && configured) {
-  const posts = (await safeList()).filter((p) => p.status === 'published').slice(0, 3);
-  posts.reverse().forEach((p) => {
-    const a = el('a', 'post-card');
-    a.href = postHref(p);
-    a.appendChild(el('div', 'cover placeholder tint-' + p.category, '커버 이미지'));
-    const body = el('div', 'body');
-    const cat = el('span', 'eyebrow', CATS[p.category] || '');
-    const b = badge(p); if (b) cat.appendChild(b);
-    body.append(cat, el('h3', null, p.title), el('span', 'meta', fmtDate(p.date) + ' · ' + readTime(p.body)));
-    a.appendChild(body);
-    recent.prepend(a);
-  });
-  $$('.post-card', recent).slice(3).forEach((n) => n.remove());
 }
 
-// ---- 글 목록: 카테고리·검색·정렬 ----
+const recent = $('[data-recent]');
+if (recent) {
+  const posts = (await visiblePosts()).filter((p) => p.status === 'published');
+  // 카테고리별 글 수
+  $$('[data-cat-count]').forEach((n) => {
+    const c = posts.filter((p) => p.category === n.dataset.catCount).length;
+    n.textContent = c ? '· ' + c + '개' : '';
+  });
+  // 추천 글 = 가장 최근 글
+  const f = posts[0];
+  if (f) {
+    const box = $('[data-featured]');
+    box.hidden = false;
+    setCover($('[data-f-cover]'), f.cover).classList.add('tint-' + f.category);
+    $('[data-f-cover]').href = postHref(f);
+    const cat = $('[data-f-cat]'); cat.textContent = '최신 글 · ' + (CATS[f.category] || '');
+    const b = badge(f); if (b) cat.appendChild(b);
+    $('[data-f-title]').textContent = f.title;
+    $('[data-f-excerpt]').textContent = excerpt(f.body);
+    $('[data-f-meta]').textContent = fmtDate(f.date) + ' · ' + readTime(f.body);
+    $('[data-f-link]').href = postHref(f);
+  }
+  const rest = posts.slice(1, 4);
+  rest.forEach((p) => {
+    const a = el('a', 'post-card');
+    a.href = postHref(p);
+    a.appendChild(coverBox('cover', p));
+    const body = el('div', 'body');
+    body.append(catLine(p), el('h3', null, p.title), el('span', 'meta', fmtDate(p.date) + ' · ' + readTime(p.body)));
+    a.appendChild(body);
+    recent.appendChild(a);
+  });
+  if (!posts.length) $('[data-recent-empty]').hidden = false;
+  if (posts.length === 1) recent.closest('section').hidden = true;
+}
+
+// ================= 글 목록 =================
 const list = $('[data-post-list]');
 if (list) {
   const rowsBox = $('[data-rows]', list);
@@ -72,54 +136,84 @@ if (list) {
     $('[data-admin-note]', list).hidden = false;
     $('.chip[data-cat="draft"]', list).hidden = false; // AC-14
   }
-  (await safeList()).forEach((p) => {
-    const a = el('a', 'post-row');
-    a.href = postHref(p);
-    a.dataset.cat = p.status === 'draft' ? 'draft' : p.category;
-    a.dataset.date = p.date.toISOString();
-    const text = el('div', 'text');
-    const cat = el('span', 'eyebrow', p.status === 'draft' ? (CATS[p.category] || '임시저장') : CATS[p.category]);
-    const b = badge(p); if (b) cat.appendChild(b);
-    text.append(cat, el('h2', null, p.title || '(제목 없음)'), el('p', null, excerpt(p.body)),
-      el('span', 'meta', (p.status === 'draft' ? '임시저장 ' : '') + fmtDate(p.date) + ' · ' + (p.status === 'draft' ? '이어 쓰기' : readTime(p.body))));
-    a.append(text, el('div', 'cover placeholder tint-' + (p.status === 'draft' ? 'draft' : p.category), '커버 이미지'));
-    rowsBox.appendChild(a);
-  });
-
-  const rows = $$('.post-row', rowsBox);
+  const posts = await visiblePosts();
   const chips = $$('.chip', list).filter((c) => !c.hidden);
   const search = $('[data-search]', list);
   const sort = $('[data-sort]', list);
-  const state = { cat: chips.some((c) => c.dataset.cat === params.get('cat')) ? params.get('cat') : 'all', q: '' };
+  const state = {
+    cat: chips.some((c) => c.dataset.cat === params.get('cat')) ? params.get('cat') : 'all',
+    q: '', tag: params.get('tag') || '', page: 1
+  };
+
+  const row = (p) => {
+    const a = el('a', 'post-row');
+    a.href = postHref(p);
+    const text = el('div', 'text');
+    const meta = p.status === 'draft'
+      ? '임시저장 ' + fmtDate(p.date) + ' · 이어 쓰기'
+      : fmtDate(p.date) + ' · ' + readTime(p.body) + (p.likes ? ' · 좋아요 ' + p.likes : '');
+    text.append(catLine(p), el('h2', null, p.title || '(제목 없음)'), el('p', null, excerpt(p.body)), el('span', 'meta', meta));
+    a.append(text, coverBox('cover', p));
+    return a;
+  };
 
   const render = () => {
     chips.forEach((c) => c.setAttribute('aria-pressed', String(c.dataset.cat === state.cat)));
     const q = state.q.trim();
-    let shown = 0;
-    rows.forEach((r) => {
-      const okCat = state.cat === 'all' ? r.dataset.cat !== 'draft' : r.dataset.cat === state.cat;
-      const okQ = !q || $('h2', r).textContent.includes(q);
-      r.hidden = !(okCat && okQ);
-      if (!r.hidden) shown++;
+    let shown = posts.filter((p) => {
+      const okCat = state.cat === 'all' ? p.status !== 'draft'
+        : state.cat === 'draft' ? p.status === 'draft'
+        : p.status !== 'draft' && p.category === state.cat;
+      const okQ = !q || p.title.includes(q);
+      const okTag = !state.tag || p.tags.includes(state.tag);
+      return okCat && okQ && okTag;
     });
-    const dir = sort.value === 'old' ? 1 : -1;
-    rows.slice().sort((a, b) => (a.dataset.date < b.dataset.date ? -dir : dir)).forEach((r) => rowsBox.appendChild(r));
-    $('[data-count]', list).textContent = '글 ' + shown + '개';
-    $('[data-empty]', list).hidden = shown !== 0;
+    if (sort.value === 'old') shown = shown.slice().sort((a, b) => a.date - b.date);
+    if (sort.value === 'popular') shown = shown.slice().sort((a, b) => b.likes - a.likes || b.date - a.date);
+
+    const pages = Math.max(1, Math.ceil(shown.length / PAGE_SIZE));
+    state.page = Math.min(state.page, pages);
+    rowsBox.innerHTML = '';
+    shown.slice((state.page - 1) * PAGE_SIZE, state.page * PAGE_SIZE).forEach((p) => rowsBox.appendChild(row(p)));
+
+    const pager = $('[data-pager]', list);
+    pager.innerHTML = '';
+    if (pages > 1) {
+      for (let n = 1; n <= pages; n++) {
+        const b = el('button', 'page-btn', String(n));
+        b.type = 'button';
+        if (n === state.page) b.setAttribute('aria-current', 'page');
+        b.addEventListener('click', () => { state.page = n; render(); window.scrollTo({ top: 0, behavior: 'smooth' }); });
+        pager.appendChild(b);
+      }
+    }
+    $('[data-tag-filter]', list).hidden = !state.tag;
+    $('[data-tag-label]', list).textContent = '#' + state.tag + ' 태그가 붙은 글';
+    $('[data-count]', list).textContent = '글 ' + shown.length + '개';
+    $('[data-empty]', list).hidden = shown.length !== 0;
+    $('[data-empty-msg]', list).textContent = posts.length
+      ? '다른 검색어를 입력하거나 카테고리를 바꿔 보세요.'
+      : '아직 올라온 글이 없어요.';
   };
-  chips.forEach((c) => c.addEventListener('click', () => { state.cat = c.dataset.cat; render(); }));
-  search.addEventListener('input', () => { state.q = search.value; render(); });
-  sort.addEventListener('change', render);
-  $('[data-reset]', list).addEventListener('click', () => { state.cat = 'all'; state.q = ''; search.value = ''; render(); });
+  chips.forEach((c) => c.addEventListener('click', () => { state.cat = c.dataset.cat; state.page = 1; render(); }));
+  search.addEventListener('input', () => { state.q = search.value; state.page = 1; render(); });
+  sort.addEventListener('change', () => { state.page = 1; render(); });
+  $('[data-tag-clear]', list).addEventListener('click', () => { state.tag = ''; history.replaceState(null, '', 'posts.html'); render(); });
+  $('[data-reset]', list).addEventListener('click', () => {
+    state.cat = 'all'; state.q = ''; state.tag = ''; state.page = 1; search.value = '';
+    history.replaceState(null, '', 'posts.html'); render();
+  });
   render();
 }
 
-// ---- 글 상세 ----
+// ================= 글 상세 =================
 const postBody = $('[data-post-body]');
-if (postBody && params.get('id')) {
+if (postBody) {
+  const id = params.get('id');
+  if (!id) location.replace('posts.html');
   let p = null;
-  try { p = await getPost(params.get('id')); } catch (e) { p = null; } // 권한 없음 = 보이지 않음 (AC-13)
-  if (!p || p.status === 'draft') {
+  try { p = id ? await getPost(id) : null; } catch (e) { p = null; } // 권한 없음 = 보이지 않음 (AC-13)
+  if (!p || (p.status === 'draft' && !admin)) {
     const main = $('.post-main');
     main.innerHTML = '';
     const box = el('div', 'post-msg');
@@ -129,34 +223,111 @@ if (postBody && params.get('id')) {
     main.appendChild(box);
   } else {
     document.title = p.title + ' - 내 블로그';
-    const catName = CATS[p.category] || '';
     const crumb = $('[data-post-crumb]');
-    crumb.textContent = catName; crumb.href = 'posts.html?cat=' + p.category;
-    const cat = $('[data-post-cat]'); cat.textContent = catName;
+    crumb.textContent = CATS[p.category] || '글 목록';
+    crumb.href = 'posts.html' + (p.category ? '?cat=' + p.category : '');
+    const cat = $('[data-post-cat]'); cat.textContent = CATS[p.category] || '';
     const b = badge(p); if (b) cat.appendChild(b);
     $('[data-post-title]').textContent = p.title;
     $('[data-post-meta]').textContent = fmtDate(p.date) + ' · ' + readTime(p.body);
-    $('[data-post-cover]').className = 'post-cover placeholder tint-' + p.category;
-    postBody.innerHTML = '';
-    p.body.split(/\n{2,}/).forEach((para) => {
-      const t = para.trim();
-      if (t) postBody.appendChild(el('p', null, t));
-    });
-    $$('p', postBody).forEach((n) => { n.style.whiteSpace = 'pre-line'; });
+    const cov = $('[data-post-cover]');
+    cov.classList.add('tint-' + p.category);
+    if (p.cover) setCover(cov, p.cover); else cov.hidden = true;
+    postBody.innerHTML = renderBody(p.body, p.images); // 글자는 모두 안전하게 바꿔서 넣음
     const tags = $('[data-post-tags]');
-    tags.innerHTML = '';
-    p.tags.forEach((t) => { const a = el('a', null, '#' + t); a.href = 'posts.html'; tags.appendChild(a); });
-    $('[data-post-nav] a').remove();
+    p.tags.forEach((t) => { const a = el('a', null, '#' + t); a.href = 'posts.html?tag=' + encodeURIComponent(t); tags.appendChild(a); });
+
+    // 이전 글
+    const all = (await visiblePosts()).filter((x) => x.status === 'published');
+    const i = all.findIndex((x) => x.id === p.id);
+    const prev = i >= 0 ? all[i + 1] : null;
+    if (prev) {
+      const a = $('[data-prev]');
+      a.hidden = false; a.href = postHref(prev);
+      $('[data-prev-title]').textContent = prev.title;
+    }
+
+    // 관리자: 수정·삭제
+    if (admin) {
+      $('[data-admin-bar]').hidden = false;
+      $('[data-edit]').href = 'write.html?id=' + encodeURIComponent(p.id);
+      $('[data-delete]').addEventListener('click', async () => {
+        if (!confirm('이 글을 삭제할까요? 댓글도 함께 지워지고 되돌릴 수 없어요.')) return;
+        try { await deletePost(p.id); location.href = 'posts.html'; } catch (e) { alert('삭제하지 못했어요.'); console.warn(e); }
+      });
+    }
+
+    // 좋아요
+    const like = $('[data-like]');
+    let likes = p.likes;
+    const drawLike = () => {
+      like.setAttribute('aria-pressed', String(hasLiked(p.id)));
+      $('span', like).textContent = '좋아요 ' + likes;
+    };
+    drawLike();
+    if (p.status === 'published') {
+      like.addEventListener('click', async () => {
+        like.disabled = true;
+        try {
+          const on = await toggleLike(p.id);
+          likes = Math.max(0, likes + (on ? 1 : -1));
+          drawLike();
+        } catch (e) { console.warn(e); }
+        like.disabled = false;
+      });
+    } else like.disabled = true;
+
+    // 댓글
+    const cList = $('[data-comment-list]');
+    const cCount = $('[data-comment-count]');
+    const cErr = $('[data-comment-error]');
+    const drawComments = async () => {
+      let cs = [];
+      try { cs = await listComments(p.id); } catch (e) { console.warn(e); }
+      cList.innerHTML = '';
+      cs.forEach((c) => {
+        const item = el('div', 'comment');
+        item.appendChild(el('span', 'avatar'));
+        const box = el('div');
+        const who = el('div', 'who');
+        who.append(el('strong', null, c.name), el('span', null, ' · ' + ago(c.date)));
+        if (admin) {
+          const del = el('button', 'link-plain comment-del', '삭제');
+          del.type = 'button';
+          del.addEventListener('click', async () => {
+            if (!confirm('이 댓글을 삭제할까요?')) return;
+            try { await deleteComment(p.id, c.id); drawComments(); } catch (e) { alert('삭제하지 못했어요.'); }
+          });
+          who.appendChild(del);
+        }
+        box.append(who, el('p', null, c.text));
+        item.appendChild(box);
+        cList.appendChild(item);
+      });
+      cCount.textContent = cs.length;
+    };
+    await drawComments();
+    const cForm = $('[data-comment-form]');
+    cForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const box = $('textarea', cForm);
+      const text = box.value.trim();
+      const name = ($('[id="comment-name"]').value.trim() || '익명').slice(0, 20);
+      if (!text) { box.focus(); return; }
+      cErr.hidden = true;
+      $('button[type="submit"]', cForm).disabled = true;
+      try {
+        await addComment(p.id, name, text.slice(0, 1000));
+        box.value = '';
+        await drawComments();
+      } catch (ex) {
+        cErr.textContent = '댓글을 등록하지 못했어요. 잠시 후 다시 시도해 주세요.';
+        cErr.hidden = false;
+        console.warn(ex);
+      }
+      $('button[type="submit"]', cForm).disabled = false;
+    });
   }
-}
-const like = $('[data-like]');
-if (like) {
-  const base = Number(like.dataset.count);
-  like.addEventListener('click', () => {
-    const on = like.getAttribute('aria-pressed') !== 'true';
-    like.setAttribute('aria-pressed', String(on));
-    $('span', like).textContent = '좋아요 ' + (base + (on ? 1 : 0));
-  });
 }
 const copy = $('[data-copy]');
 if (copy) {
@@ -169,30 +340,17 @@ if (copy) {
     if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
   });
 }
-const cForm = $('[data-comment-form]');
-if (cForm) {
-  cForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const box = $('textarea', cForm);
-    const text = box.value.trim();
-    if (!text) { box.focus(); return; }
-    const item = el('div', 'comment');
-    item.innerHTML = '<span class="avatar" aria-hidden="true"></span><div><div class="who"><strong>나</strong> <span>· 방금</span></div><p></p></div>';
-    $('p', item).textContent = text;
-    $('[data-comment-list]').appendChild(item);
-    const count = $('[data-comment-count]');
-    count.textContent = Number(count.textContent) + 1;
-    box.value = '';
-  });
-}
 
-// ---- 글쓰기 (관리자만) ----
+// ================= 글쓰기 (관리자만) =================
 if (document.body.classList.contains('write-page')) {
   if (!admin) {
     location.replace('login.html'); // AC-12
   } else {
     let postId = params.get('id');
+    let wasPublished = false;
     let tags = [];
+    let cover = '';
+    let images = {};
     const title = $('[data-title]');
     const body = $('[data-body]');
     const catSel = $('[data-cat-select]');
@@ -202,9 +360,10 @@ if (document.body.classList.contains('write-page')) {
     const tagList = $('[data-tag-list]');
     const tagForm = $('[data-tag-form]');
 
+    const showError = (msg) => { errBox.textContent = msg; errBox.hidden = !msg; };
     const setVis = (v) => visBtns.forEach((b) => b.setAttribute('aria-checked', String(b.dataset.vis === v)));
     const getVis = () => (visBtns.find((b) => b.getAttribute('aria-checked') === 'true') || visBtns[0]).dataset.vis;
-    const count = () => { $('[data-char-count]').textContent = body.value.length; }; // AC-06
+    const count = () => { $('[data-char-count]').textContent = plainText(body.value).length; }; // AC-06
     const drawTags = () => {
       tagList.innerHTML = '';
       tags.forEach((t) => {
@@ -219,46 +378,148 @@ if (document.body.classList.contains('write-page')) {
       });
     };
 
-    // 임시저장 글 이어 쓰기 (AC-18)
+    // 기존 글 불러오기: 임시저장 이어 쓰기(AC-18), 발행 글 수정
     if (postId) {
       try {
         const p = await getPost(postId);
         if (p) {
           title.value = p.title; body.value = p.body; catSel.value = p.category;
-          tags = p.tags.slice(); setVis(p.visibility);
-          saveState.textContent = p.status === 'draft' ? '임시저장 글 · ' + fmtDate(p.date) : '발행된 글 수정 중';
+          tags = p.tags.slice(); setVis(p.visibility); cover = p.cover; images = { ...p.images };
+          wasPublished = p.status === 'published';
+          saveState.textContent = wasPublished ? '발행된 글 수정 중' : '임시저장 글 · ' + fmtDate(p.date);
+          $('[data-publish]').textContent = wasPublished ? '수정 발행' : '발행하기';
+          $('[data-write-delete]').hidden = false;
         } else postId = null;
       } catch (e) { postId = null; }
     }
-    count(); drawTags();
+
+    // ---- 대표 이미지 ----
+    const drop = $('[data-cover-drop]');
+    const fileInput = $('[data-cover-file]');
+    const hint = $('[data-cover-hint]');
+    const HINT = hint.textContent;
+    const drawCover = () => {
+      drop.style.backgroundImage = cover ? 'url("' + cover + '")' : '';
+      drop.classList.toggle('has-image', !!cover);
+      $('[data-cover-tools]').hidden = !cover;
+      $('[data-cover-pick]').hidden = !!cover;
+      hint.hidden = !!cover;
+    };
+    const useFile = async (file) => {
+      if (!file) return;
+      showError('');
+      hint.textContent = '이미지를 줄이는 중…';
+      try { cover = await compressImage(file); } catch (e) {
+        showError(e.message === 'not-image' ? '이미지 파일만 올릴 수 있어요.' : '이미지를 불러오지 못했어요. 다른 파일로 시도해 주세요.');
+      }
+      hint.textContent = HINT;
+      drawCover();
+    };
+    $('[data-cover-pick]').addEventListener('click', () => fileInput.click());
+    $('[data-cover-change]').addEventListener('click', () => fileInput.click());
+    $('[data-cover-remove]').addEventListener('click', () => { cover = ''; drawCover(); });
+    fileInput.addEventListener('change', () => { useFile(fileInput.files[0]); fileInput.value = ''; });
+    drop.addEventListener('dragover', (e) => { e.preventDefault(); drop.classList.add('is-over'); });
+    drop.addEventListener('dragleave', () => drop.classList.remove('is-over'));
+    drop.addEventListener('drop', (e) => { e.preventDefault(); drop.classList.remove('is-over'); useFile(e.dataTransfer.files[0]); });
+
+    // ---- 서식 툴바 ----
+    const replaceSel = (fn) => {
+      const s = body.selectionStart, e = body.selectionEnd;
+      const [text, selStart, selEnd] = fn(body.value.slice(s, e), s);
+      body.setRangeText(text, s, e, 'end');
+      body.focus();
+      if (selStart != null) body.setSelectionRange(selStart, selEnd);
+      count();
+    };
+    const wrap = (mark, placeholder) => replaceSel((sel, s) => {
+      const inner = sel || placeholder;
+      return [mark + inner + mark, s + mark.length, s + mark.length + inner.length];
+    });
+    const prefixLines = (prefix) => {
+      // 선택한 줄들의 맨 앞에 기호를 붙임
+      const v = body.value;
+      const start = v.lastIndexOf('\n', body.selectionStart - 1) + 1;
+      let end = v.indexOf('\n', body.selectionEnd);
+      if (end === -1) end = v.length;
+      const lines = v.slice(start, end).split('\n').map((l) => (l.startsWith(prefix) ? l.slice(prefix.length) : prefix + l));
+      body.setRangeText(lines.join('\n'), start, end, 'select');
+      body.focus();
+      count();
+    };
+    const inlineFile = $('[data-inline-file]');
+    const dataSize = () => JSON.stringify({ b: body.value, c: cover, i: images }).length;
+    inlineFile.addEventListener('change', async () => {
+      const file = inlineFile.files[0];
+      inlineFile.value = '';
+      if (!file) return;
+      showError('');
+      try {
+        const data = await compressImage(file, 250000, 1200);
+        if (dataSize() + data.length > 950000) { showError('이미지가 너무 많아 더 넣을 수 없어요. (글 1개에 약 1MB까지)'); return; }
+        const id = Date.now().toString(36);
+        images[id] = data;
+        replaceSel(() => ['\n![이미지](img:' + id + ')\n', null, null]);
+      } catch (e) {
+        showError(e.message === 'not-image' ? '이미지 파일만 넣을 수 있어요.' : '이미지를 불러오지 못했어요.');
+      }
+    });
+    $$('[data-fmt]').forEach((btn) => btn.addEventListener('click', () => {
+      const cmd = btn.dataset.fmt;
+      if (cmd === 'h2') prefixLines('## ');
+      if (cmd === 'quote') prefixLines('> ');
+      if (cmd === 'list') prefixLines('- ');
+      if (cmd === 'bold') wrap('**', '굵은 글자');
+      if (cmd === 'italic') wrap('*', '기울인 글자');
+      if (cmd === 'link') {
+        const url = prompt('연결할 주소를 입력하세요 (https://로 시작)', 'https://');
+        if (!url || !/^https?:\/\/\S+$/.test(url.trim())) return;
+        replaceSel((sel, s) => {
+          const label = sel || '링크';
+          return ['[' + label + '](' + url.trim() + ')', s + 1, s + 1 + label.length];
+        });
+      }
+      if (cmd === 'image') inlineFile.click();
+    }));
+
+    count(); drawTags(); drawCover();
     document.body.removeAttribute('data-guard');
 
     body.addEventListener('input', count);
     tagForm.addEventListener('submit', (e) => { // AC-08
       e.preventDefault();
       const input = $('input', tagForm);
-      const t = input.value.trim().replace(/^#/, '');
-      if (t && !tags.includes(t)) tags.push(t);
+      const t = input.value.trim().replace(/^#/, '').slice(0, 30);
+      if (t && !tags.includes(t) && tags.length < 20) tags.push(t);
       input.value = '';
       drawTags();
     });
     visBtns.forEach((b) => b.addEventListener('click', () => setVis(b.dataset.vis))); // AC-07
 
-    const collect = () => ({ title: title.value.trim(), body: body.value, category: catSel.value, tags, visibility: getVis() });
-    const showError = (msg) => { errBox.textContent = msg; errBox.hidden = !msg; };
-    const busy = (on) => $$('[data-save], [data-publish]').forEach((b) => { b.disabled = on; });
+    const collect = () => {
+      // 본문에서 지운 이미지는 함께 정리
+      const used = {};
+      body.value.replace(/!\[[^\]]*\]\(img:([\w-]+)\)/g, (m, id) => { if (images[id]) used[id] = images[id]; return m; });
+      return { title: title.value.trim(), body: body.value, category: catSel.value, tags, visibility: getVis(), cover, images: used };
+    };
+    const busy = (on) => $$('[data-save], [data-publish], [data-write-delete]').forEach((b) => { b.disabled = on; });
+    const saveErr = (e, what) => {
+      const big = e && /size|exceeds|too large/i.test(String(e.message));
+      showError(big ? '이미지가 너무 커서 저장하지 못했어요. 이미지를 줄이거나 빼 주세요.' : what + '하지 못했어요. 잠시 후 다시 시도해 주세요.');
+      console.warn(e);
+    };
 
     $('[data-save]').addEventListener('click', async () => { // AC-09
       showError(''); busy(true);
       try {
-        postId = await savePost(postId, collect(), false);
+        postId = await savePost(postId, collect(), false, false);
+        wasPublished = false;
         history.replaceState(null, '', 'write.html?id=' + encodeURIComponent(postId));
+        $('[data-write-delete]').hidden = false;
+        $('[data-publish]').textContent = '발행하기';
         const d = new Date();
         saveState.textContent = '임시저장됨 · ' + String(d.getHours()).padStart(2, '0') + ':' + String(d.getMinutes()).padStart(2, '0') + ' · 임시저장 카테고리에 보관';
-      } catch (e) {
-        showError('저장하지 못했어요. 잠시 후 다시 시도해 주세요.');
-        console.warn(e);
-      }
+      } catch (e) { saveErr(e, '저장'); }
       busy(false);
     });
 
@@ -271,18 +532,20 @@ if (document.body.classList.contains('write-page')) {
       if (missing.length) { showError(missing.join(', ') + '을(를) 입력해 주세요.'); return; }
       showError(''); busy(true);
       try {
-        postId = await savePost(postId, data, true);
+        postId = await savePost(postId, data, true, !wasPublished);
         location.href = 'post.html?id=' + encodeURIComponent(postId); // AC-10
-      } catch (e) {
-        showError('발행하지 못했어요. 잠시 후 다시 시도해 주세요.');
-        console.warn(e);
-        busy(false);
-      }
+      } catch (e) { saveErr(e, '발행'); busy(false); }
+    });
+
+    $('[data-write-delete]').addEventListener('click', async () => {
+      if (!postId || !confirm('이 글을 삭제할까요? 되돌릴 수 없어요.')) return;
+      busy(true);
+      try { await deletePost(postId); location.href = 'posts.html'; } catch (e) { saveErr(e, '삭제'); busy(false); }
     });
   }
 }
 
-// ---- 관리자 로그인 (구글) ----
+// ================= 관리자 로그인 (구글) =================
 const loginForm = $('[data-login-form]');
 if (loginForm) {
   const done = $('[data-login-done]');
@@ -317,7 +580,9 @@ if (loginForm) {
       err.hidden = false;
     } catch (ex) {
       if (ex && ex.code !== 'auth/popup-closed-by-user' && ex.code !== 'auth/cancelled-popup-request') {
-        err.textContent = '로그인하지 못했어요. 잠시 후 다시 시도해 주세요.';
+        err.textContent = ex.code === 'auth/unauthorized-domain'
+          ? '이 주소가 Firebase 승인된 도메인에 없어요. (Authentication → 설정 → 승인된 도메인)'
+          : '로그인하지 못했어요. 잠시 후 다시 시도해 주세요.';
         err.hidden = false;
         console.warn(ex);
       }

@@ -28,7 +28,7 @@
   <main class="wrap list-main" data-post-list>
     <div>
       <h1 class="page-title">글 목록</h1>
-      <p class="count" data-count>글 6개</p>
+      <p class="count" data-count>글을 불러오는 중…</p>
       <p class="admin-note" data-admin-note hidden><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>관리자로 보는 중 · 임시저장 탭과 나만 보기 글은 관리자에게만 보여요</p>
     </div>
 
@@ -50,75 +50,25 @@
         <select id="sort" class="select" data-sort>
           <option value="new">최신순</option>
           <option value="old">오래된순</option>
+          <option value="popular">인기순</option>
         </select>
       </div>
     </div>
 
     <div class="empty" data-empty hidden>
       <strong>찾는 글이 없어요</strong>
-      <p>다른 검색어를 입력하거나 카테고리를 바꿔 보세요.</p>
+      <p data-empty-msg>다른 검색어를 입력하거나 카테고리를 바꿔 보세요.</p>
       <button type="button" class="btn btn-line" data-reset>필터 초기화</button>
     </div>
 
-    <!-- 새 글을 쓰면 아래 목록 맨 위에 <a class="post-row"> 한 덩어리를 추가하세요 -->
-    <div data-rows>
-      <a class="post-row" href="post.html" data-cat="plan" data-date="2026-11-15">
-        <div class="text">
-          <span class="eyebrow">기획</span>
-          <h2>작은 기능부터 프로토타입으로 검증하는 법</h2>
-          <p>문서를 끝까지 쓰기 전에 화면 한 장으로 먼저 반응을 확인하는 과정.</p>
-          <span class="meta">2026.11.15 · 6분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-plan">커버 이미지</div>
-      </a>
-      <a class="post-row" href="post.html" data-cat="plan" data-date="2026-11-12">
-        <div class="text">
-          <span class="eyebrow">기획</span>
-          <h2>회의록을 PRD로 옮길 때 빠지기 쉬운 것들</h2>
-          <p>결정 사항과 미정 사항을 구분해 두지 않으면 문서가 금방 낡습니다.</p>
-          <span class="meta">2026.11.12 · 5분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-plan">커버 이미지</div>
-      </a>
-      <a class="post-row" href="post.html" data-cat="design" data-date="2026-11-08">
-        <div class="text">
-          <span class="eyebrow">디자인</span>
-          <h2>빈 화면(Empty state)도 기획의 일부다</h2>
-          <p>데이터가 없을 때 사용자가 다음에 무엇을 해야 하는지 알려주는 화면 설계.</p>
-          <span class="meta">2026.11.08 · 4분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-design">커버 이미지</div>
-      </a>
-      <a class="post-row" href="post.html" data-cat="retro" data-date="2026-11-03">
-        <div class="text">
-          <span class="eyebrow">회고</span>
-          <h2>첫 챗봇 프로토타입을 만들고 배운 점</h2>
-          <p>대화 흐름을 그림으로 먼저 그렸더니 예외 상황이 눈에 들어왔습니다.</p>
-          <span class="meta">2026.11.03 · 7분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-retro">커버 이미지</div>
-      </a>
-      <a class="post-row" href="post.html" data-cat="retro" data-date="2026-10-31">
-        <div class="text">
-          <span class="eyebrow">회고</span>
-          <h2>10월 한 달 회고</h2>
-          <p>배운 것, 아쉬운 것, 다음 달에 시도할 것을 짧게 남깁니다.</p>
-          <span class="meta">2026.10.31 · 4분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-retro">커버 이미지</div>
-      </a>
-      <a class="post-row" href="post.html" data-cat="design" data-date="2026-10-21">
-        <div class="text">
-          <span class="eyebrow">디자인</span>
-          <h2>버튼 문구 하나로 달라지는 클릭</h2>
-          <p>"확인" 대신 행동을 말해주는 버튼 문구를 쓰는 연습.</p>
-          <span class="meta">2026.10.21 · 3분 읽기</span>
-        </div>
-        <div class="cover placeholder tint-design">커버 이미지</div>
-      </a>
+    <div class="tag-filter" data-tag-filter hidden>
+      <span data-tag-label></span>
+      <button type="button" class="link-plain" data-tag-clear aria-label="태그 필터 해제">✕</button>
     </div>
 
-    <nav class="pager" aria-label="페이지"><span aria-current="page">1</span></nav>
+    <div data-rows></div>
+
+    <nav class="pager" aria-label="페이지" data-pager></nav>
   </main>
 
   <footer class="site-footer">
