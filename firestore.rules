@@ -1,0 +1,36 @@
+rules_version = '2';
+
+// 블로그 글 보호 규칙 — Firebase 콘솔 [Firestore Database → 규칙]에 그대로 붙여 넣고 [게시]합니다.
+// ADMIN_UID 자리에 firebase-config.js의 ADMIN_UID와 같은 값을 넣습니다.
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    function isAdmin() {
+      return request.auth != null && request.auth.uid == 'ADMIN_UID';
+    }
+
+    function validPost() {
+      let p = request.resource.data;
+      return p.status in ['draft', 'published']
+        && p.visibility in ['public', 'private']
+        && p.title is string && p.body is string
+        && p.tags is list && p.tags.size() <= 20
+        && (p.status == 'draft'
+            || (p.title.size() > 0 && p.body.size() > 0
+                && p.category in ['plan', 'design', 'retro']));
+    }
+
+    match /posts/{postId} {
+      // 방문자: 공개로 발행된 글만 읽기 (나만 보기·임시저장은 관리자만)
+      allow read: if isAdmin()
+        || (resource.data.status == 'published' && resource.data.visibility == 'public');
+      // 쓰기: 관리자 1명만
+      allow create, update: if isAdmin() && validPost();
+      allow delete: if isAdmin();
+    }
+
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
