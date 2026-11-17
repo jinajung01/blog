@@ -94,7 +94,8 @@ for (const p of posts) {
     mainEntityOfPage: pageUrl, url: pageUrl,
     articleSection: cat || undefined, keywords: p.tags.join(', ') || undefined,
     author: { '@type': 'Person', name: 'zn' },
-    publisher: { '@type': 'Organization', name: 'zn' }
+    publisher: { '@type': 'Organization', name: 'zn' },
+    image: SITE + 'og-image.png'
   };
   const head = `  <meta name="description" content="${esc(desc)}">
   <link rel="canonical" href="${pageUrl}">
@@ -108,14 +109,18 @@ for (const p of posts) {
   <meta property="article:published_time" content="${p.published.toISOString()}">
   <meta property="article:modified_time" content="${p.updated.toISOString()}">
   ${cat ? `<meta property="article:section" content="${esc(cat)}">` : ''}
-  <meta name="twitter:card" content="summary">
+  <meta property="og:image" content="https://jinajung01.github.io/blog/og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+  <meta property="og:image:alt" content="zn blog">
+  <meta name="twitter:card" content="summary_large_image">
   <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
 
   let html = template;
   // 상대 주소(style.css, main.js, posts.html 등)가 블로그 첫 폴더 기준으로 동작하도록
   html = replaceOnce(html, '<meta charset="UTF-8">', '<meta charset="UTF-8">\n  <base href="../">');
   html = replaceOnce(html, '<title>글 - zn</title>', `<title>${esc(p.title)} - zn</title>`);
-  html = html.replace(/  <meta name="description" content="[^"]*" data-seo-desc>/, () => head);
+  html = html.replace(/  <!-- SEO\(글\) 시작[\s\S]*?<!-- SEO\(글\) 끝 -->/, () => head);
   html = replaceOnce(html, '<body>', `<body data-post-id="${p.id}">`);
   html = replaceOnce(html, '<a href="posts.html" data-post-crumb>글 목록</a>',
     `<a href="posts.html${p.category ? '?cat=' + p.category : ''}" data-post-crumb>${esc(cat || '글 목록')}</a>`);
