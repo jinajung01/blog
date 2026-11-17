@@ -12,4 +12,4 @@ export const firebaseConfig = {
 
 // 관리자 구글 계정의 사용자 ID(UID) 1개 — 처음 로그인하면 로그인 화면에 표시됩니다.
 // firestore.rules 안의 같은 값도 함께 바꿔야 합니다.
-export const ADMIN_UID = '';
+export const ADMIN_UID = '5O7QPzPsnLUSRNf9fefKpNEYayW2';

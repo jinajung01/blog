@@ -1,12 +1,12 @@
 rules_version = '2';
 
 // 블로그 글 보호 규칙 — Firebase 콘솔 [Firestore Database → 규칙]에 그대로 붙여 넣고 [게시]합니다.
-// ADMIN_UID 자리에 firebase-config.js의 ADMIN_UID와 같은 값을 넣습니다.
+// 관리자 UID는 firebase-config.js의 ADMIN_UID와 같아야 합니다.
 service cloud.firestore {
   match /databases/{database}/documents {
 
     function isAdmin() {
-      return request.auth != null && request.auth.uid == 'ADMIN_UID';
+      return request.auth != null && request.auth.uid == '5O7QPzPsnLUSRNf9fefKpNEYayW2';
     }
 
     function validPost() {
