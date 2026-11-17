@@ -1,0 +1,140 @@
+/* 색상: 밝은 화면 기본값 */
+:root {
+  --bg: #fbfaf7;
+  --text: #24221f;
+  --muted: #6f6a62;
+  --line: #e6e1d8;
+  --accent: #c2562d;
+  --card: #ffffff;
+  --max: 720px;
+}
+
+/* 어두운 화면 */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #1a1917;
+    --text: #ece8e1;
+    --muted: #a39d93;
+    --line: #34312c;
+    --accent: #e88a5f;
+    --card: #232120;
+  }
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", system-ui, sans-serif;
+  line-height: 1.75;
+  word-break: keep-all;
+}
+
+a { color: var(--accent); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+.wrap {
+  max-width: var(--max);
+  margin: 0 auto;
+  padding: 0 20px;
+}
+
+/* 머리글 */
+.site-header {
+  border-bottom: 1px solid var(--line);
+  padding: 20px 0;
+}
+.site-header .wrap {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 16px;
+}
+.logo {
+  font-weight: 800;
+  font-size: 1.2rem;
+  color: var(--text);
+}
+.logo:hover { text-decoration: none; }
+.nav { display: flex; gap: 18px; font-size: 0.95rem; }
+.nav a { color: var(--muted); }
+.nav a:hover { color: var(--text); text-decoration: none; }
+
+/* 소개 */
+.intro { padding: 56px 0 32px; }
+.intro h1 { font-size: 2rem; margin: 0 0 8px; line-height: 1.3; }
+.intro p { margin: 0; color: var(--muted); }
+
+/* 글 목록 */
+.section-title {
+  font-size: 0.85rem;
+  letter-spacing: 0.08em;
+  color: var(--muted);
+  margin: 24px 0 8px;
+}
+.post-list { list-style: none; padding: 0; margin: 0 0 64px; }
+.post-item {
+  border-top: 1px solid var(--line);
+  padding: 22px 0;
+}
+.post-item:last-child { border-bottom: 1px solid var(--line); }
+.post-item a.title {
+  display: block;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: var(--text);
+}
+.post-item a.title:hover { color: var(--accent); text-decoration: none; }
+.post-item p { margin: 4px 0 8px; color: var(--muted); }
+.meta { font-size: 0.85rem; color: var(--muted); }
+.tag {
+  display: inline-block;
+  font-size: 0.78rem;
+  padding: 1px 9px;
+  margin-left: 6px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+}
+
+/* 글 본문 */
+.post { padding: 48px 0 64px; }
+.post h1 { font-size: 1.9rem; line-height: 1.35; margin: 8px 0 12px; }
+.post h2 { font-size: 1.3rem; margin-top: 40px; }
+.post blockquote {
+  margin: 24px 0;
+  padding: 4px 18px;
+  border-left: 3px solid var(--accent);
+  color: var(--muted);
+}
+.post code {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 4px;
+  padding: 1px 6px;
+  font-size: 0.9em;
+}
+.back { display: inline-block; margin-top: 40px; }
+
+/* 소개 페이지 카드 */
+.card {
+  background: var(--card);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 24px;
+  margin-bottom: 64px;
+}
+
+/* 바닥글 */
+.site-footer {
+  border-top: 1px solid var(--line);
+  padding: 24px 0 40px;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+@media (max-width: 480px) {
+  .intro h1 { font-size: 1.6rem; }
+  .post h1 { font-size: 1.5rem; }
+}
