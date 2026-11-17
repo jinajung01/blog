@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261117c';
+} from './data.js?v=20261117e';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -16,6 +16,23 @@ const el = (tag, cls, text) => {
 };
 const params = new URLSearchParams(location.search);
 const PAGE_SIZE = 10;
+
+// ---- GA 이벤트 (이벤트 택소노미 TO-BE) ----
+// 관리자 기기는 GA 코드에서 수집이 꺼져 있어 여기서 보내도 기록되지 않음
+const track = (name, params) => {
+  if (typeof window.gtag === 'function') window.gtag('event', name, params || {});
+};
+// 글 링크에 data-loc를 붙여 두면 클릭할 때 select_content 전송
+document.addEventListener('click', (e) => {
+  const a = e.target.closest('a[data-loc][data-post-id]');
+  if (a) track('select_content', { content_type: 'post', post_id: a.dataset.postId, list_location: a.dataset.loc });
+});
+const markLink = (a, p, loc) => {
+  if (p.status === 'draft') return a; // 임시저장 글(관리자 전용)은 제외
+  a.dataset.loc = loc;
+  a.dataset.postId = p.id;
+  return a;
+};
 
 // 로그인 상태
 let user = null;
@@ -84,6 +101,7 @@ if (subForm) {
     $('button', subForm).disabled = true;
     try {
       const r = await subscribe(email);
+      if (r === 'ok') track('sign_up', { method: 'email', signup_location: 'home' });
       store.set('blog.subscribed', '1');
       done.textContent = r === 'already' ? '이미 구독 중인 주소예요.' : '구독 신청이 완료되었습니다.';
       subForm.hidden = true; done.hidden = false;
@@ -110,12 +128,14 @@ if (recent) {
     box.hidden = false;
     setCover($('[data-f-cover]'), f.cover).classList.add('tint-' + f.category);
     $('[data-f-cover]').href = postHref(f);
+    markLink($('[data-f-cover]'), f, 'home_featured');
     const cat = $('[data-f-cat]'); cat.textContent = '최신 글 · ' + (CATS[f.category] || '');
     const b = badge(f); if (b) cat.appendChild(b);
     $('[data-f-title]').textContent = f.title;
     $('[data-f-excerpt]').textContent = excerpt(f.body);
     $('[data-f-meta]').textContent = fmtDate(f.date) + ' · ' + readTime(f.body);
     $('[data-f-link]').href = postHref(f);
+    markLink($('[data-f-link]'), f, 'home_featured');
   }
   const rest = posts.slice(1, 4);
   rest.forEach((p) => {
@@ -125,7 +145,7 @@ if (recent) {
     const body = el('div', 'body');
     body.append(catLine(p), el('h3', null, p.title), el('span', 'meta', fmtDate(p.date) + ' · ' + readTime(p.body)));
     a.appendChild(body);
-    recent.appendChild(a);
+    recent.appendChild(markLink(a, p, 'home_recent'));
   });
   if (!posts.length) $('[data-recent-empty]').hidden = false;
   if (posts.length === 1) recent.closest('section').hidden = true;
@@ -149,7 +169,7 @@ if (list) {
   };
 
   const row = (p) => {
-    const a = el('a', 'post-row');
+    const a = markLink(el('a', 'post-row'), p, 'list');
     a.href = postHref(p);
     const text = el('div', 'text');
     const meta = p.status === 'draft'
@@ -197,10 +217,25 @@ if (list) {
     $('[data-empty-msg]', list).textContent = posts.length
       ? '다른 검색어를 입력하거나 카테고리를 바꿔 보세요.'
       : '아직 올라온 글이 없어요.';
+    return shown.length;
   };
-  chips.forEach((c) => c.addEventListener('click', () => { state.cat = c.dataset.cat; state.page = 1; render(); }));
-  search.addEventListener('input', () => { state.q = search.value; state.page = 1; render(); });
-  sort.addEventListener('change', () => { state.page = 1; render(); });
+  chips.forEach((c) => c.addEventListener('click', () => {
+    if (state.cat === c.dataset.cat) return;
+    state.cat = c.dataset.cat; state.page = 1; render();
+    track('filter_apply', { filter_type: 'category', filter_value: state.cat });
+  }));
+  let searchTimer = null;
+  search.addEventListener('input', () => {
+    state.q = search.value; state.page = 1;
+    const count = render();
+    clearTimeout(searchTimer);
+    const term = state.q.trim();
+    if (term) searchTimer = setTimeout(() => track('search', { search_term: term, result_count: count }), 1000); // 입력을 멈추고 1초 뒤
+  });
+  sort.addEventListener('change', () => {
+    state.page = 1; render();
+    track('filter_apply', { filter_type: 'sort', filter_value: sort.value });
+  });
   $('[data-tag-clear]', list).addEventListener('click', () => { state.tag = ''; history.replaceState(null, '', 'posts.html'); render(); });
   $('[data-reset]', list).addEventListener('click', () => {
     state.cat = 'all'; state.q = ''; state.tag = ''; state.page = 1; search.value = '';
@@ -211,6 +246,7 @@ if (list) {
 
 // ================= 글 상세 =================
 const postBody = $('[data-post-body]');
+let currentPost = null; // GA 이벤트용 (공개된 글을 불러왔을 때만)
 if (postBody) {
   const id = params.get('id');
   if (!id) location.replace('posts.html');
@@ -226,6 +262,7 @@ if (postBody) {
     main.appendChild(box);
   } else {
     document.title = p.title + ' - zn';
+    currentPost = p;
     const crumb = $('[data-post-crumb]');
     crumb.textContent = CATS[p.category] || '글 목록';
     crumb.href = 'posts.html' + (p.category ? '?cat=' + p.category : '');
@@ -238,7 +275,12 @@ if (postBody) {
     if (p.cover) setCover(cov, p.cover); else cov.hidden = true;
     postBody.innerHTML = renderBody(p.body, p.images); // 글자는 모두 안전하게 바꿔서 넣음
     const tags = $('[data-post-tags]');
-    p.tags.forEach((t) => { const a = el('a', null, '#' + t); a.href = 'posts.html?tag=' + encodeURIComponent(t); tags.appendChild(a); });
+    p.tags.forEach((t) => {
+      const a = el('a', null, '#' + t);
+      a.href = 'posts.html?tag=' + encodeURIComponent(t);
+      a.addEventListener('click', () => track('filter_apply', { filter_type: 'tag', filter_value: t }));
+      tags.appendChild(a);
+    });
 
     // 이전 글
     const all = (await visiblePosts()).filter((x) => x.status === 'published');
@@ -248,6 +290,7 @@ if (postBody) {
       const a = $('[data-prev]');
       a.hidden = false; a.href = postHref(prev);
       $('[data-prev-title]').textContent = prev.title;
+      markLink(a, prev, 'post_prev');
     }
 
     // 관리자: 수정·삭제
@@ -273,6 +316,7 @@ if (postBody) {
         like.disabled = true;
         try {
           const on = await toggleLike(p.id);
+          track(on ? 'post_like' : 'post_unlike', { post_id: p.id, post_category: p.category });
           likes = Math.max(0, likes + (on ? 1 : -1));
           drawLike();
         } catch (e) { console.warn(e); }
@@ -321,6 +365,7 @@ if (postBody) {
       $('button[type="submit"]', cForm).disabled = true;
       try {
         await addComment(p.id, name, text.slice(0, 1000));
+        track('comment_submit', { post_id: p.id, post_category: p.category });
         box.value = '';
         await drawComments();
       } catch (ex) {
@@ -333,8 +378,24 @@ if (postBody) {
   }
 }
 // GA: 글 상세는 실제 글 제목으로 방문 기록
-if (postBody && typeof window.gtag === 'function') {
-  window.gtag('event', 'page_view', { page_title: document.title, page_location: location.href });
+if (postBody) {
+  const pv = { page_title: document.title, page_location: location.href, page_type: 'post' };
+  if (currentPost) { pv.post_id = currentPost.id; pv.post_category = currentPost.category; }
+  track('page_view', pv);
+  // 본문이 끝나는 곳(태그 바로 아래 좋아요·링크 복사 줄)이 화면에 보이면 글당 1번
+  // 태그가 없는 글은 태그 영역 높이가 0이라, 항상 높이가 있는 버튼 줄을 기준으로 삼음
+  const end = $('.actions') || $('[data-post-tags]');
+  if (currentPost && currentPost.status === 'published' && end) {
+    const check = () => {
+      if (end.getBoundingClientRect().top > window.innerHeight) return;
+      window.removeEventListener('scroll', check);
+      window.removeEventListener('resize', check);
+      track('post_read_complete', { post_id: currentPost.id, post_category: currentPost.category });
+    };
+    window.addEventListener('scroll', check, { passive: true });
+    window.addEventListener('resize', check);
+    check(); // 짧은 글은 처음부터 끝까지 보일 수 있음
+  }
 }
 const copy = $('[data-copy]');
 if (copy) {
@@ -342,6 +403,7 @@ if (copy) {
     const label = $('span', copy);
     const done = () => {
       label.textContent = '복사했어요';
+      if (currentPost) track('share', { method: 'link_copy', content_type: 'post', item_id: currentPost.id });
       setTimeout(() => { label.textContent = '링크 복사'; }, 1500);
     };
     if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
