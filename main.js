@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js';
+} from './data.js?v=20261117b';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -222,7 +222,7 @@ if (postBody) {
     box.appendChild(back);
     main.appendChild(box);
   } else {
-    document.title = p.title + ' - 내 블로그';
+    document.title = p.title + ' - zn';
     const crumb = $('[data-post-crumb]');
     crumb.textContent = CATS[p.category] || '글 목록';
     crumb.href = 'posts.html' + (p.category ? '?cat=' + p.category : '');
@@ -415,7 +415,12 @@ if (document.body.classList.contains('write-page')) {
       hint.textContent = HINT;
       drawCover();
     };
-    $('[data-cover-pick]').addEventListener('click', () => fileInput.click());
+    // 점선 칸 어디를 눌러도 파일 고르기 창이 열림 (이미지가 있을 땐 바꾸기·삭제 버튼만)
+    drop.addEventListener('click', (e) => {
+      if (e.target.closest('[data-cover-tools]')) return;
+      if (!cover) fileInput.click();
+    });
+    $('[data-cover-pick]').addEventListener('click', (e) => { e.stopPropagation(); fileInput.click(); });
     $('[data-cover-change]').addEventListener('click', () => fileInput.click());
     $('[data-cover-remove]').addEventListener('click', () => { cover = ''; drawCover(); });
     fileInput.addEventListener('change', () => { useFile(fileInput.files[0]); fileInput.value = ''; });

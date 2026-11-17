@@ -450,3 +450,5 @@ button, input, textarea, select { font: inherit; }
 .article figure img { display: block; max-width: 100%; height: auto; border-radius: 12px; }
 .article a { text-decoration: underline; }
 .like-disabled, .action:disabled { opacity: .6; cursor: default; }
+.cover-drop:not(.has-image) { cursor: pointer; }
+.cover-drop:not(.has-image):hover { border-color: var(--accent); background-color: var(--soft); }
