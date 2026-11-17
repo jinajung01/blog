@@ -3,17 +3,17 @@
    ========================================================= */
 
 :root {
-  --bg: #fbf3f5;
-  --paper: #fffdfd;
-  --blush-50: #fdf6f8;
-  --blush-100: #f9e9ee;
-  --blush-200: #f3d6df;
-  --blush-300: #e9bccb;
-  --rose: #c98aa0;
-  --rose-deep: #9e5a72;
-  --ink: #3d2a31;
-  --muted: #7f6670;
-  --line: #ecd5dd;
+  --bg: #fdf8f9;
+  --paper: #fffefe;
+  --blush-50: #fefafb;
+  --blush-100: #fcf1f4;
+  --blush-200: #f8e5eb;
+  --blush-300: #f1d2dc;
+  --rose: #d6a3b5;
+  --rose-deep: #9a5f75;
+  --ink: #4a3840;
+  --muted: #7a6470;
+  --line: #f3e3e9;
   --serif-en: "Cormorant Garamond", "Gowun Batang", serif;
   --serif-ko: "Gowun Batang", "Batang", serif;
   --sans: "Noto Sans KR", "Malgun Gothic", sans-serif;
@@ -35,8 +35,8 @@ body {
   word-break: keep-all;
   background-color: var(--bg);
   background-image:
-    linear-gradient(90deg, rgba(233,188,203,.16) 50%, transparent 50%),
-    linear-gradient(rgba(233,188,203,.16) 50%, transparent 50%);
+    linear-gradient(90deg, rgba(241,210,220,.16) 50%, transparent 50%),
+    linear-gradient(rgba(241,210,220,.16) 50%, transparent 50%);
   background-size: 64px 64px;
 }
 
@@ -187,8 +187,8 @@ a { color: inherit; }
   color: var(--rose-deep);
   text-decoration: none;
   background:
-    linear-gradient(90deg, rgba(233,188,203,.45) 50%, transparent 50%) 0 0 / 26px 26px,
-    linear-gradient(rgba(233,188,203,.45) 50%, transparent 50%) 0 0 / 26px 26px,
+    linear-gradient(90deg, rgba(241,210,220,.45) 50%, transparent 50%) 0 0 / 26px 26px,
+    linear-gradient(rgba(241,210,220,.45) 50%, transparent 50%) 0 0 / 26px 26px,
     var(--blush-50);
 }
 .cover.dots {
