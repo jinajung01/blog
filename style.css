@@ -3,17 +3,17 @@
    ========================================================= */
 
 :root {
-  --bg: #fdf8f9;
+  --bg: #fcf0f4;
   --paper: #fffefe;
-  --blush-50: #fefafb;
-  --blush-100: #fcf1f4;
-  --blush-200: #f8e5eb;
-  --blush-300: #f1d2dc;
-  --rose: #d6a3b5;
-  --rose-deep: #9a5f75;
+  --blush-50: #fdf3f7;
+  --blush-100: #fbe3eb;
+  --blush-200: #f6cedb;
+  --blush-300: #eeb4c7;
+  --rose: #dc8aa7;
+  --rose-deep: #a8496d;
   --ink: #4a3840;
   --muted: #7a6470;
-  --line: #f3e3e9;
+  --line: #f1d8e1;
   --serif-en: "Cormorant Garamond", "Gowun Batang", serif;
   --serif-ko: "Gowun Batang", "Batang", serif;
   --sans: "Noto Sans KR", "Malgun Gothic", sans-serif;
@@ -35,8 +35,8 @@ body {
   word-break: keep-all;
   background-color: var(--bg);
   background-image:
-    linear-gradient(90deg, rgba(241,210,220,.16) 50%, transparent 50%),
-    linear-gradient(rgba(241,210,220,.16) 50%, transparent 50%);
+    linear-gradient(90deg, rgba(238,180,199,.28) 50%, transparent 50%),
+    linear-gradient(rgba(238,180,199,.28) 50%, transparent 50%);
   background-size: 64px 64px;
 }
 
@@ -175,7 +175,7 @@ a { color: inherit; }
   cursor: pointer;
   transition: background .2s, color .2s;
 }
-.btn:hover { background: var(--ink); color: var(--paper); }
+.btn:hover { background: var(--rose-deep); border-color: var(--rose-deep); color: var(--paper); }
 
 /* 썸네일 (체크무늬 표지) */
 .cover {
@@ -187,8 +187,8 @@ a { color: inherit; }
   color: var(--rose-deep);
   text-decoration: none;
   background:
-    linear-gradient(90deg, rgba(241,210,220,.45) 50%, transparent 50%) 0 0 / 26px 26px,
-    linear-gradient(rgba(241,210,220,.45) 50%, transparent 50%) 0 0 / 26px 26px,
+    linear-gradient(90deg, rgba(238,180,199,.55) 50%, transparent 50%) 0 0 / 26px 26px,
+    linear-gradient(rgba(238,180,199,.55) 50%, transparent 50%) 0 0 / 26px 26px,
     var(--blush-50);
 }
 .cover.dots {
@@ -294,7 +294,7 @@ a { color: inherit; }
   transition: all .2s;
 }
 .chip:hover { border-color: var(--rose); color: var(--ink); }
-.chip[aria-pressed="true"] { background: var(--ink); border-color: var(--ink); color: var(--paper); }
+.chip[aria-pressed="true"] { background: var(--rose-deep); border-color: var(--rose-deep); color: var(--paper); }
 .chip .count { margin-left: 4px; opacity: .6; font-size: .78rem; }
 
 /* 글 카드 */
