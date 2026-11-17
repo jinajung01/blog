@@ -7,7 +7,7 @@
   <meta name="description" content="배우고 만든 것을 기록하는 블로그">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
@@ -17,60 +17,141 @@
       <span class="controls" aria-hidden="true"><i></i><i></i><i></i></span>
     </div>
 
-    <nav class="nav">
-      <a class="brand" href="index.html">내 블로그</a>
-      <a class="is-on" href="index.html">Home</a>
-      <a href="about.html">About</a>
-    </nav>
+    <!-- 머리글 -->
+    <header class="header">
+      <div class="header-inner">
+        <a class="brand" href="index.html">내 블로그<small>diary</small></a>
+        <nav class="menu" aria-label="주 메뉴">
+          <a class="is-on" href="index.html">홈</a>
+          <a href="#posts">카테고리</a>
+          <a href="about.html">소개</a>
+        </nav>
+        <form class="search" role="search" action="index.html">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9e5a72" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <label class="sr-only" for="search">글 검색</label>
+          <input id="search" name="q" type="search" placeholder="글 검색" autocomplete="off">
+        </form>
+      </div>
+    </header>
 
-    <main class="page">
-      <section class="hero">
-        <div>
-          <span class="label"><span class="star">✦</span>Diary, since 2026</span>
-          <h1>배우고 만든 것을<br><em>기록합니다</em></h1>
-          <p>AI와 함께 무언가를 만들며 알게 된 것들을 천천히 적어 둡니다.</p>
-        </div>
+    <main class="main">
 
-        <aside class="profile">
-          <div class="profile-inner">
-            <span class="label">Profile</span>
-            <div class="avatar" aria-hidden="true"></div>
-            <p class="name">블로그 주인</p>
-            <dl>
-              <dt>like</dt><dd>만들기, 기록하기, 분홍색</dd>
-              <dt>dislike</dt><dd>버그, 저장 안 한 파일</dd>
-              <dt>now</dt><dd>AI와 챗봇 만드는 중</dd>
-            </dl>
+      <!-- 추천 글 -->
+      <section class="featured" aria-label="추천 글">
+        <div class="featured-text">
+          <span class="eyebrow">추천 글 · 일상</span>
+          <h1><a href="posts/first-post.html">블로그를 시작합니다</a></h1>
+          <p>배운 것을 그냥 흘려보내지 않으려고 블로그를 만들었습니다. 왜 시작했는지, 앞으로 어떤 글을 쓸지 적어 봤어요.</p>
+          <div class="byline">
+            <span class="avatar" aria-hidden="true"></span>
+            <span>블로그 주인 · 2026.11.17 · 2분 읽기</span>
           </div>
-        </aside>
+          <a class="btn" href="posts/first-post.html">읽어보기 →</a>
+        </div>
+        <a class="cover" href="posts/first-post.html" aria-label="블로그를 시작합니다 읽기"><span>Journal No. 01</span></a>
       </section>
 
-      <div class="section-head">
-        <h2>Journal</h2>
-        <span>글 1편</span>
-      </div>
+      <div class="layout">
 
-      <!-- 새 글을 쓰면 아래 <li> 한 덩어리를 복사해 맨 위에 추가하세요 -->
-      <ul class="posts">
-        <li class="post-row">
-          <a href="posts/first-post.html">
-            <span class="thumb">No. 01</span>
-            <div>
-              <span class="meta">2026. 11. 17 · 일상</span>
-              <h3>블로그를 시작합니다</h3>
-              <p>왜 블로그를 만들었는지, 앞으로 어떤 글을 쓸지 적어 봤습니다.</p>
+        <!-- 글 목록 -->
+        <section id="posts" aria-label="글 목록">
+          <div class="list-head">
+            <h2>최신 글<span class="label">latest</span></h2>
+            <div class="filters" role="group" aria-label="카테고리 필터">
+              <button class="chip" type="button" data-cat="all" aria-pressed="true">전체</button>
+              <button class="chip" type="button" data-cat="daily" aria-pressed="false">일상</button>
+              <button class="chip" type="button" data-cat="make" aria-pressed="false">만들기</button>
+              <button class="chip" type="button" data-cat="retro" aria-pressed="false">회고</button>
             </div>
-          </a>
-        </li>
-      </ul>
+          </div>
+
+          <!-- 새 글을 쓰면 아래 <a class="card"> 한 덩어리를 복사해 맨 앞에 추가하세요.
+               data-cat: daily(일상) / make(만들기) / retro(회고) -->
+          <div class="cards">
+            <a class="card" href="posts/first-post.html" data-cat="daily">
+              <div class="cover"><span>No. 01</span></div>
+              <div class="card-body">
+                <span class="eyebrow">일상</span>
+                <h3>블로그를 시작합니다</h3>
+                <p>왜 블로그를 만들었는지, 앞으로 어떤 글을 쓸지 적어 봤습니다.</p>
+                <span class="meta">2026.11.17 · 2분 읽기</span>
+              </div>
+            </a>
+
+            <div class="card soon" data-cat="make">
+              <div class="cover dots"><span>coming soon</span></div>
+              <div class="card-body">
+                <span class="badge">준비 중</span>
+                <h3>AI와 함께 첫 챗봇 만들기</h3>
+                <p>챗봇을 처음 만들면서 막혔던 부분과 해결한 방법을 정리할 예정이에요.</p>
+                <span class="meta">만들기</span>
+              </div>
+            </div>
+
+            <div class="card soon" data-cat="retro">
+              <div class="cover stripe"><span>coming soon</span></div>
+              <div class="card-body">
+                <span class="badge">준비 중</span>
+                <h3>11월 한 달 회고</h3>
+                <p>배운 것, 아쉬운 것, 다음 달에 해 볼 것을 짧게 남길 예정이에요.</p>
+                <span class="meta">회고</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="empty" id="empty" role="status">
+            <strong>찾는 글이 없어요</strong>
+            다른 단어로 검색하거나 카테고리를 바꿔 보세요.
+          </div>
+        </section>
+
+        <!-- 사이드바 -->
+        <aside class="sidebar">
+          <section class="about-card" aria-label="블로그 소개">
+            <span class="avatar lg" aria-hidden="true"></span>
+            <strong>블로그 주인</strong>
+            <p>AI와 함께 챗봇과 웹페이지를 만들며 배운 것을 기록합니다.</p>
+            <a class="more" href="about.html">소개 더 보기 →</a>
+          </section>
+
+          <section aria-label="카테고리">
+            <h2 class="side-title">카테고리</h2>
+            <ul class="cat-list">
+              <li><span>일상</span><span>1</span></li>
+              <li><span>만들기</span><span>0</span></li>
+              <li><span>회고</span><span>0</span></li>
+            </ul>
+          </section>
+
+          <section aria-label="태그">
+            <h2 class="side-title">태그</h2>
+            <div class="tags">
+              <span class="tag">#블로그시작</span>
+              <span class="tag">#기록</span>
+              <span class="tag">#AI</span>
+              <span class="tag">#챗봇</span>
+            </div>
+          </section>
+
+          <section class="note" aria-label="안내">
+            <span class="label"><span class="star">✦</span>a little note</span>
+            완벽하게 쓰기보다 꾸준히 쓰는 것을 목표로 해요. 새 글은 천천히 올라옵니다.
+          </section>
+        </aside>
+      </div>
     </main>
 
-    <div class="statusbar">
-      <span>last updated 2026. 11. 17</span>
-      <span>thank you for visiting ✦</span>
-    </div>
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>© 2026 내 블로그 · last updated 2026.11.17</span>
+        <nav aria-label="바닥글 메뉴">
+          <a href="about.html">소개</a>
+          <a href="https://github.com/jinajung01/blog">GitHub</a>
+        </nav>
+      </div>
+    </footer>
   </div>
 
-  <p class="footer-note">© 2026 내 블로그</p>
+  <script src="main.js"></script>
 </body>
 </html>

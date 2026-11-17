@@ -4,9 +4,10 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>블로그를 시작합니다 - 내 블로그</title>
+  <meta name="description" content="왜 블로그를 만들었는지, 앞으로 어떤 글을 쓸지 적어 봤습니다.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@300;400&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;1,400;1,500&family=Gowun+Batang:wght@400;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="../style.css">
 </head>
 <body>
@@ -16,41 +17,72 @@
       <span class="controls" aria-hidden="true"><i></i><i></i><i></i></span>
     </div>
 
-    <nav class="nav">
-      <a class="brand" href="../index.html">내 블로그</a>
-      <a href="../index.html">Home</a>
-      <a href="../about.html">About</a>
-    </nav>
+    <header class="header">
+      <div class="header-inner">
+        <a class="brand" href="../index.html">내 블로그<small>diary</small></a>
+        <nav class="menu" aria-label="주 메뉴">
+          <a href="../index.html">홈</a>
+          <a href="../index.html#posts">카테고리</a>
+          <a href="../about.html">소개</a>
+        </nav>
+        <form class="search" role="search" action="../index.html">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#9e5a72" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg>
+          <label class="sr-only" for="search">글 검색</label>
+          <input id="search" name="q" type="search" placeholder="글 검색" autocomplete="off">
+        </form>
+      </div>
+    </header>
 
-    <main class="page">
+    <main class="main">
       <article class="article">
-        <span class="label"><span class="star">✦</span>Journal No. 01</span>
-        <p class="meta">2026. 11. 17 · 일상</p>
-        <h1>블로그를 시작합니다</h1>
+        <header class="article-head">
+          <span class="eyebrow">일상 · Journal No. 01</span>
+          <h1>블로그를 시작합니다</h1>
+          <div class="byline">
+            <span class="avatar" aria-hidden="true"></span>
+            <span>블로그 주인 · 2026.11.17 · 2분 읽기</span>
+          </div>
+        </header>
 
-        <p>배운 것을 그냥 흘려보내지 않으려고 블로그를 만들었습니다.
-          작은 것이라도 직접 써 보면 더 오래 기억에 남는다고 하니까요.</p>
+        <div class="cover" aria-hidden="true"><span>Journal No. 01</span></div>
 
-        <h2>어떤 글을 쓸까</h2>
-        <p>AI와 함께 챗봇이나 웹페이지를 만들면서 겪은 일,
-          막혔던 부분과 해결한 방법을 주로 적어 보려고 합니다.</p>
+        <div class="article-body">
+          <p>배운 것을 그냥 흘려보내지 않으려고 블로그를 만들었습니다.
+            작은 것이라도 직접 써 보면 더 오래 기억에 남는다고 하니까요.</p>
 
-        <blockquote>완벽하게 쓰기보다, 꾸준히 쓰는 것을 목표로 합니다.</blockquote>
+          <h2>어떤 글을 쓸까</h2>
+          <p>AI와 함께 챗봇이나 웹페이지를 만들면서 겪은 일,
+            막혔던 부분과 해결한 방법을 주로 적어 보려고 합니다.</p>
 
-        <h2>새 글 쓰는 법 (메모)</h2>
-        <p><code>posts</code> 폴더에서 이 파일을 복사해 내용을 바꾸고,
-          <code>index.html</code>의 글 목록에 한 줄을 추가하면 됩니다.</p>
+          <blockquote>완벽하게 쓰기보다, 꾸준히 쓰는 것을 목표로 합니다.</blockquote>
 
-        <a class="back" href="../index.html">← back to journal</a>
+          <h2>새 글 쓰는 법 (메모)</h2>
+          <p><code>posts</code> 폴더에서 이 파일을 복사해 내용을 바꾸고,
+            <code>index.html</code>의 글 목록에 카드 하나를 추가하면 됩니다.</p>
+        </div>
+
+        <footer class="article-foot">
+          <div class="tags">
+            <span class="tag">#블로그시작</span>
+            <span class="tag">#기록</span>
+          </div>
+          <nav class="post-nav" aria-label="이전·다음 글">
+            <div><small>이전 글</small>첫 글이에요</div>
+            <a class="next" href="../index.html"><small>목록으로</small>모든 글 보기 →</a>
+          </nav>
+        </footer>
       </article>
     </main>
 
-    <div class="statusbar">
-      <span>page 1 / 1</span>
-      <span>thank you for reading ✦</span>
-    </div>
+    <footer class="footer">
+      <div class="footer-inner">
+        <span>© 2026 내 블로그</span>
+        <nav aria-label="바닥글 메뉴">
+          <a href="../about.html">소개</a>
+          <a href="https://github.com/jinajung01/blog">GitHub</a>
+        </nav>
+      </div>
+    </footer>
   </div>
-
-  <p class="footer-note">© 2026 내 블로그</p>
 </body>
 </html>
