@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261117b';
+} from './data.js?v=20261117c';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -21,12 +21,15 @@ const PAGE_SIZE = 10;
 let user = null;
 try { user = await currentUser(); } catch (e) { console.warn('로그인 확인 실패', e); }
 const admin = isAdmin(user);
+// 관리자 기기 표시: GA 방문 통계에서 내 방문을 빼기 위함
+if (admin) store.set('blog.isAdmin', '1');
 
 // 헤더 글쓰기 버튼: 관리자면 바로 글쓰기, 아니면 로그인 화면 (AC-01)
 if (admin) $$('[data-write-link]').forEach((a) => { a.href = 'write.html'; });
 
 $$('[data-logout]').forEach((b) => b.addEventListener('click', async () => {
   await signOutNow();
+  store.del('blog.isAdmin');
   location.href = 'index.html'; // AC-16
 }));
 
@@ -328,6 +331,10 @@ if (postBody) {
       $('button[type="submit"]', cForm).disabled = false;
     });
   }
+}
+// GA: 글 상세는 실제 글 제목으로 방문 기록
+if (postBody && typeof window.gtag === 'function') {
+  window.gtag('event', 'page_view', { page_title: document.title, page_location: location.href });
 }
 const copy = $('[data-copy]');
 if (copy) {
