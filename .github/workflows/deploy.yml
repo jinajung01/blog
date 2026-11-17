@@ -1,0 +1,45 @@
+# 블로그 배포: 코드를 올릴 때와 매시간 자동으로
+# - Firebase의 공개 글로 검색용 글 페이지(p/글ID.html), sitemap.xml, rss.xml을 만들어 함께 배포
+# - 새 글을 발행하면 늦어도 1시간 안에 검색용 페이지와 사이트맵에 반영됨
+#   (바로 반영하려면 GitHub 저장소 → Actions → "블로그 배포" → Run workflow)
+name: 블로그 배포
+
+on:
+  push:
+    branches: [main]
+  schedule:
+    - cron: '7 * * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: 사이트 만들기
+        run: node scripts/build-site.mjs _site
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

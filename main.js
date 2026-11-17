@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261117e';
+} from './data.js?v=20261117f';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -248,7 +248,8 @@ if (list) {
 const postBody = $('[data-post-body]');
 let currentPost = null; // GA 이벤트용 (공개된 글을 불러왔을 때만)
 if (postBody) {
-  const id = params.get('id');
+  // post.html?id=… 또는 검색용 글 페이지(p/글ID.html, body에 data-post-id)
+  const id = params.get('id') || document.body.dataset.postId;
   if (!id) location.replace('posts.html');
   let p = null;
   try { p = id ? await getPost(id) : null; } catch (e) { p = null; } // 권한 없음 = 보이지 않음 (AC-13)
@@ -263,6 +264,15 @@ if (postBody) {
   } else {
     document.title = p.title + ' - zn';
     currentPost = p;
+    // SEO: post.html?id=… 로 연 경우, 검색엔진에는 같은 글의 검색용 페이지(p/글ID.html)를 대표 주소로 알림
+    if (!document.body.dataset.postId && p.status === 'published' && p.visibility === 'public') {
+      const canon = document.createElement('link');
+      canon.rel = 'canonical';
+      canon.href = new URL('p/' + encodeURIComponent(p.id) + '.html', location.href).href;
+      document.head.appendChild(canon);
+      const desc = $('[data-seo-desc]');
+      if (desc) desc.content = excerpt(p.body).slice(0, 150) || desc.content;
+    }
     const crumb = $('[data-post-crumb]');
     crumb.textContent = CATS[p.category] || '글 목록';
     crumb.href = 'posts.html' + (p.category ? '?cat=' + p.category : '');
@@ -275,6 +285,7 @@ if (postBody) {
     if (p.cover) setCover(cov, p.cover); else cov.hidden = true;
     postBody.innerHTML = renderBody(p.body, p.images); // 글자는 모두 안전하게 바꿔서 넣음
     const tags = $('[data-post-tags]');
+    tags.innerHTML = ''; // 검색용 페이지에 미리 들어 있는 태그와 겹치지 않게
     p.tags.forEach((t) => {
       const a = el('a', null, '#' + t);
       a.href = 'posts.html?tag=' + encodeURIComponent(t);

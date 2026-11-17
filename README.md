@@ -40,3 +40,13 @@ HTML·CSS·자바스크립트로만 만든 블로그입니다. 따로 설치할 
 ## 인터넷에 공개하기 (GitHub Pages)
 
 `main` 브랜치에 올리면 `https://jinajung01.github.io/blog/` 주소에 자동으로 반영됩니다.
+
+## 검색 노출 (SEO)
+
+- 배포는 GitHub Actions(`.github/workflows/deploy.yml`)가 맡습니다. `main`에 올릴 때와 **매시간** 자동으로 실행됩니다.
+- 실행할 때마다 `scripts/build-site.mjs`가 Firebase의 공개 글을 읽어 다음을 만듭니다.
+  - `p/글ID.html`: 글마다 내용이 미리 들어 있는 검색용 페이지 (네이버 등 자바스크립트를 읽지 않는 검색엔진·공유 미리보기용)
+  - `sitemap.xml`: 검색엔진에 제출하는 주소 목록
+  - `rss.xml`: 새 글 피드 (네이버 서치어드바이저에 제출)
+- 새 글을 바로 반영하려면 GitHub 저장소 → **Actions → 블로그 배포 → Run workflow**를 누릅니다.
+- 내 컴퓨터에서 미리 보기: `node scripts/build-site.mjs _site`
