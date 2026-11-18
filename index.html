@@ -22,7 +22,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261118a">
+  <link rel="stylesheet" href="style.css?v=20261118b">
   <!-- Google Analytics -->
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-P39T7H6M6M"></script>
   <script>
@@ -47,6 +47,16 @@
       </a>
     </div>
   </header>
+
+  <!-- 오늘 서울 날씨 (배포 때 받아 온 widgets.json, 데이터가 없으면 숨김) -->
+  <div class="weather-bar" data-weather hidden>
+    <div class="wrap">
+      <img class="weather-icon" data-w-icon alt="" width="36" height="36">
+      <span class="weather-main"><b data-w-city>서울</b> <span data-w-desc></span> <b class="weather-temp" data-w-temp></b></span>
+      <span class="weather-sub" data-w-sub></span>
+      <span class="weather-at" data-w-at></span>
+    </div>
+  </div>
 
   <main>
     <section class="hero" aria-label="블로그 소개">
@@ -115,6 +125,18 @@
           <button type="submit">구독하기</button>
         </form>
       </section>
+
+      <!-- 쉬어 가는 고양이 사진 (배포 때 받아 온 widgets.json, 사진이 없으면 숨김) -->
+      <section class="stack cat-break" aria-label="쉬어 가는 고양이" data-cat hidden>
+        <div class="section-head">
+          <h2>잠깐 쉬어 가요</h2>
+          <button type="button" class="btn btn-line btn-pill" data-cat-next>다른 고양이 보기</button>
+        </div>
+        <figure class="cat-photo">
+          <img data-cat-img alt="고양이 사진" loading="lazy">
+          <figcaption>사진 제공: The Cat API</figcaption>
+        </figure>
+      </section>
     </div>
   </main>
 
@@ -126,6 +148,6 @@
       </div>
     </div>
   </footer>
-  <script type="module" src="main.js?v=20261118a"></script>
+  <script type="module" src="main.js?v=20261118b"></script>
 </body>
 </html>

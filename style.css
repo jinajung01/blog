@@ -376,7 +376,26 @@ button, input, textarea, select { font: inherit; }
 .notice { padding: 14px 16px; border-radius: 8px; background: #E6F4EA; color: #1E6B3A; font-size: 14px; font-weight: 500; }
 
 /* ===== 작은 화면 ===== */
+/* ===== 첫 화면: 날씨 띠 ===== */
+.weather-bar { background: var(--ink); color: #fff; }
+.weather-bar .wrap { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; min-height: 48px; padding-top: 6px; padding-bottom: 6px; font-size: 14px; }
+.weather-icon { width: 36px; height: 36px; margin: -4px -8px -4px -6px; }
+.weather-main b { font-weight: 700; }
+.weather-temp { font-family: var(--font-title); font-size: 17px; margin-left: 2px; }
+.weather-sub { color: #C9CDD6; }
+.weather-at { color: #9AA1AE; font-size: 13px; margin-left: auto; }
+
+/* ===== 첫 화면: 고양이 사진 ===== */
+.cat-break { max-width: 720px; }
+.cat-break .section-head { align-items: center; }
+.cat-break .btn { height: 40px; padding: 0 16px; font-size: 13px; }
+.cat-photo { margin: 0; display: flex; flex-direction: column; gap: 8px; }
+.cat-photo img { display: block; width: 100%; max-width: 720px; height: 420px; object-fit: cover; border-radius: 12px; background: var(--gray); }
+.cat-photo figcaption { font-size: 12px; color: var(--faint); }
+
 @media (max-width: 640px) {
+  .weather-at { margin-left: 0; width: 100%; }
+  .cat-photo img { height: 300px; }
   .hero .wrap { padding-top: 64px; padding-bottom: 64px; }
   .hero h1 { font-size: 36px; }
   .hero p { font-size: 17px; }

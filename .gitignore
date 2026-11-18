@@ -1,2 +1,4 @@
 _site/
 node_modules/
+# 미리보기용 샘플 (배포 때는 빌드가 새로 만듦)
+widgets.json

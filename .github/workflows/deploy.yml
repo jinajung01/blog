@@ -30,6 +30,10 @@ jobs:
           node-version: 22
       - name: 사이트 만들기
         run: node scripts/build-site.mjs _site
+        env:
+          # 첫 화면 날씨·고양이 사진용 키 (저장소 Settings → Secrets and variables → Actions)
+          OPENWEATHER_API_KEY: ${{ secrets.OPENWEATHER_API_KEY }}
+          THECATAPI_KEY: ${{ secrets.THECATAPI_KEY }}
       - uses: actions/upload-pages-artifact@v3
         with:
           path: _site

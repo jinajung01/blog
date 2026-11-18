@@ -170,4 +170,41 @@ ${posts.slice(0, 30).map((p) => `  <item>
 </rss>
 `);
 
+// ---------- 6. widgets.json (첫 화면 날씨·고양이 사진) ----------
+// API 키는 GitHub 저장소 Secrets(OPENWEATHER_API_KEY, THECATAPI_KEY)에만 두고, 배포할 때 여기서 받아 옴
+// → 키가 사이트 코드에 드러나지 않음. 매시간 자동 배포 때마다 새로 받아 옴
+// 키가 없거나 요청이 실패해도 배포는 계속하고, 그 칸만 화면에서 숨김
+async function getJson(u, headers = {}) {
+  try {
+    const r = await fetch(u, { headers, signal: AbortSignal.timeout(10000) });
+    if (!r.ok) { console.warn('위젯 데이터 요청 실패:', r.status, u.split('?')[0]); return null; }
+    return await r.json();
+  } catch (e) { console.warn('위젯 데이터 요청 오류:', e.message); return null; }
+}
+const widgets = { updatedAt: new Date().toISOString(), weather: null, cats: [] };
+const owKey = process.env.OPENWEATHER_API_KEY;
+if (owKey) {
+  const w = await getJson(`https://api.openweathermap.org/data/2.5/weather?lat=37.5665&lon=126.978&units=metric&lang=kr&appid=${owKey}`);
+  if (w && w.main && w.weather && w.weather[0]) {
+    widgets.weather = {
+      city: '서울',
+      temp: Math.round(w.main.temp),
+      feels: Math.round(w.main.feels_like),
+      min: Math.round(w.main.temp_min),
+      max: Math.round(w.main.temp_max),
+      humidity: w.main.humidity,
+      desc: w.weather[0].description,
+      icon: w.weather[0].icon,
+      at: new Date(w.dt * 1000).toISOString()
+    };
+  }
+}
+const catKey = process.env.THECATAPI_KEY;
+if (catKey) {
+  const c = await getJson('https://api.thecatapi.com/v1/images/search?limit=12&mime_types=jpg,png&size=med', { 'x-api-key': catKey });
+  if (Array.isArray(c)) widgets.cats = c.filter((x) => x && /^https:\/\//.test(x.url)).map((x) => ({ url: x.url, w: x.width, h: x.height }));
+}
+await writeFile(join(OUT, 'widgets.json'), JSON.stringify(widgets));
+console.log(`위젯: 날씨 ${widgets.weather ? '있음' : '없음'}, 고양이 사진 ${widgets.cats.length}장`);
+
 console.log(`완료: 글 페이지 ${posts.length}개, sitemap.xml, rss.xml → ${OUT}`);

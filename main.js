@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261118a';
+} from './data.js?v=20261118b';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -86,6 +86,40 @@ const ago = (d) => {
 };
 
 // ================= 첫 화면 =================
+// 날씨 띠·고양이 사진: 배포 때 만들어진 widgets.json을 읽어서 표시 (없거나 실패하면 그 칸은 숨긴 채로 둠)
+const weatherBar = $('[data-weather]');
+const catBox = $('[data-cat]');
+if (weatherBar || catBox) {
+  fetch('widgets.json', { cache: 'no-cache' })
+    .then((r) => (r.ok ? r.json() : null))
+    .then((data) => {
+      if (!data) return;
+      const w = data.weather;
+      if (weatherBar && w) {
+        $('[data-w-icon]', weatherBar).src = `https://openweathermap.org/img/wn/${encodeURIComponent(w.icon)}@2x.png`;
+        $('[data-w-city]', weatherBar).textContent = w.city;
+        $('[data-w-desc]', weatherBar).textContent = w.desc;
+        $('[data-w-temp]', weatherBar).textContent = `${w.temp}°`;
+        $('[data-w-sub]', weatherBar).textContent = `최저 ${w.min}° · 최고 ${w.max}° · 체감 ${w.feels}° · 습도 ${w.humidity}%`;
+        const at = new Date(w.at);
+        $('[data-w-at]', weatherBar).textContent = `${at.toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', month: 'numeric', day: 'numeric', hour: 'numeric' })} 기준`;
+        weatherBar.hidden = false;
+      }
+      const cats = Array.isArray(data.cats) ? data.cats.filter((c) => c && /^https:\/\//.test(c.url)) : [];
+      if (catBox && cats.length) {
+        const img = $('[data-cat-img]', catBox);
+        let i = Math.floor(Math.random() * cats.length);
+        const show = () => { img.src = cats[i].url; };
+        show();
+        const next = $('[data-cat-next]', catBox);
+        if (cats.length < 2) next.hidden = true;
+        next.addEventListener('click', () => { i = (i + 1) % cats.length; show(); });
+        catBox.hidden = false;
+      }
+    })
+    .catch(() => {});
+}
+
 const subForm = $('[data-subscribe-form]');
 if (subForm) {
   const done = $('[data-subscribe-done]');
