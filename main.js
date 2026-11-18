@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261117f';
+} from './data.js?v=20261118a';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -390,22 +390,43 @@ if (postBody) {
 }
 // GA: 글 상세는 실제 글 제목으로 방문 기록
 if (postBody) {
-  const pv = { page_title: document.title, page_location: location.href, page_type: 'post' };
-  if (currentPost) { pv.post_id = currentPost.id; pv.post_category = currentPost.category; }
+  const pv = { page_type: 'post', page_title: document.title, page_location: location.href };
+  if (currentPost) {
+    // 같은 글이 post.html?id=… 와 p/글ID.html 두 주소로 나뉘지 않도록 대표 주소로 통일하고,
+    // 이 페이지에서 나가는 모든 이벤트(체류 시간 포함)에 글 ID·카테고리를 붙임
+    const shared = {
+      page_location: new URL('p/' + encodeURIComponent(currentPost.id) + '.html', document.baseURI).href,
+      page_title: document.title,
+      post_id: currentPost.id,
+      post_category: currentPost.category
+    };
+    if (typeof window.gtag === 'function') window.gtag('set', shared);
+    Object.assign(pv, shared);
+  }
   track('page_view', pv);
-  // 본문이 끝나는 곳(태그 바로 아래 좋아요·링크 복사 줄)이 화면에 보이면 글당 1번
-  // 태그가 없는 글은 태그 영역 높이가 0이라, 항상 높이가 있는 버튼 줄을 기준으로 삼음
+
+  // 완독: 본문 끝(좋아요·링크 복사 줄)이 화면에 보였고, 글을 연 지 최소 시간이 지났을 때 글당 1번
+  // 최소 시간 = 예상 읽는 시간(1분에 500자)의 절반, 10초~2분 사이
   const end = $('.actions') || $('[data-post-tags]');
   if (currentPost && currentPost.status === 'published' && end) {
+    const minMs = Math.min(120, Math.max(10, plainText(currentPost.body).length * 0.06)) * 1000;
+    let seen = false;
+    let sent = false;
+    let timer = null;
     const check = () => {
-      if (end.getBoundingClientRect().top > window.innerHeight) return;
+      if (sent) return;
+      if (!seen && end.getBoundingClientRect().top <= window.innerHeight) seen = true;
+      if (!seen || performance.now() < minMs) return;
+      sent = true;
+      clearTimeout(timer);
       window.removeEventListener('scroll', check);
       window.removeEventListener('resize', check);
-      track('post_read_complete', { post_id: currentPost.id, post_category: currentPost.category });
+      track('post_read_complete', { post_id: currentPost.id, post_category: currentPost.category, read_seconds: Math.round(performance.now() / 1000) });
     };
     window.addEventListener('scroll', check, { passive: true });
     window.addEventListener('resize', check);
-    check(); // 짧은 글은 처음부터 끝까지 보일 수 있음
+    timer = setTimeout(check, Math.max(0, minMs - performance.now()) + 100); // 끝을 먼저 봤으면 최소 시간이 되는 순간 기록
+    check();
   }
 }
 const copy = $('[data-copy]');
@@ -414,7 +435,7 @@ if (copy) {
     const label = $('span', copy);
     const done = () => {
       label.textContent = '복사했어요';
-      if (currentPost) track('share', { method: 'link_copy', content_type: 'post', item_id: currentPost.id });
+      if (currentPost) track('share', { method: 'link_copy', content_type: 'post', item_id: currentPost.id, post_id: currentPost.id, post_category: currentPost.category });
       setTimeout(() => { label.textContent = '링크 복사'; }, 1500);
     };
     if (navigator.clipboard) navigator.clipboard.writeText(location.href).then(done, done); else done();
