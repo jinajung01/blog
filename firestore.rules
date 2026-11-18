@@ -61,6 +61,30 @@ service cloud.firestore {
       }
     }
 
+    // 조회수: 공개 글을 열 때 누구나 그날 숫자와 전체 숫자를 1씩만 올릴 수 있음, 보기는 관리자만
+    match /views/{postId} {
+      function postIsPublic() {
+        return isPublic(get(/databases/$(database)/documents/posts/$(postId)).data);
+      }
+      function validDay(d) {
+        return d is string && d.matches('^[0-9]{4}-[0-9]{2}-[0-9]{2}$');
+      }
+      allow read, delete: if isAdmin();
+      allow create: if postIsPublic()
+        && request.resource.data.keys().hasOnly(['total', 'last', 'days'])
+        && request.resource.data.total == 1
+        && validDay(request.resource.data.last)
+        && request.resource.data.days is map
+        && request.resource.data.days.keys().hasOnly([request.resource.data.last])
+        && request.resource.data.days[request.resource.data.last] == 1;
+      allow update: if postIsPublic()
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['total', 'last', 'days'])
+        && request.resource.data.total == resource.data.total + 1
+        && validDay(request.resource.data.last)
+        && request.resource.data.days.diff(resource.data.days).affectedKeys().hasOnly([request.resource.data.last])
+        && request.resource.data.days[request.resource.data.last] == resource.data.days.get(request.resource.data.last, 0) + 1;
+    }
+
     // 구독 신청: 누구나 신청만 가능 (같은 주소는 한 번만), 목록은 관리자만 봄
     match /subscribers/{email} {
       allow create: if request.resource.data.keys().hasOnly(['email', 'createdAt'])

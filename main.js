@@ -3,8 +3,8 @@ import {
   configured, adminReady, CATS, isAdmin, currentUser, signInGoogle, signOutNow,
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
-  compressImage, renderBody, plainText, fmtDate, readTime
-} from './data.js?v=20261118b';
+  compressImage, renderBody, plainText, fmtDate, readTime, countView, listViews, kstDay
+} from './data.js?v=20261118c';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -43,6 +43,8 @@ if (admin) store.set('blog.isAdmin', '1');
 
 // 헤더 글쓰기 버튼: 관리자면 바로 글쓰기, 아니면 로그인 화면 (AC-01)
 if (admin) $$('[data-write-link]').forEach((a) => { a.href = 'write.html'; });
+// 관리자에게만 보이는 메뉴 (조회수)
+if (admin) $$('[data-admin-only]').forEach((a) => { a.hidden = false; });
 
 $$('[data-logout]').forEach((b) => b.addEventListener('click', async () => {
   await signOutNow();
@@ -298,6 +300,10 @@ if (postBody) {
   } else {
     document.title = p.title + ' - zn';
     currentPost = p;
+    // 조회수 기록: 공개 글만, 관리자 기기는 제외 (관리자 조회수 화면용)
+    if (!admin && !store.get('blog.isAdmin') && p.status === 'published' && p.visibility === 'public') {
+      countView(p.id).catch((e) => console.warn('조회수 기록 실패', e));
+    }
     // SEO: post.html?id=… 로 연 경우, 검색엔진에는 같은 글의 검색용 페이지(p/글ID.html)를 대표 주소로 알림
     if (!document.body.dataset.postId && p.status === 'published' && p.visibility === 'public') {
       const canon = document.createElement('link');
@@ -682,6 +688,206 @@ if (document.body.classList.contains('write-page')) {
       busy(true);
       try { await deletePost(postId); location.href = 'posts.html'; } catch (e) { saveErr(e, '삭제'); busy(false); }
     });
+  }
+}
+
+// ================= 조회수 (관리자만, Chart.js) =================
+if (document.body.classList.contains('stats-page')) {
+  if (!admin) {
+    location.replace('login.html');
+  } else {
+    document.body.removeAttribute('data-guard');
+    const DAYS = 60; // 최근 60일을 불러와 7일·30일과 그 직전 기간을 비교
+    const keys = [];
+    for (let i = DAYS - 1; i >= 0; i--) keys.push(kstDay(new Date(Date.now() - i * 864e5)));
+    const dayLabel = (k) => Number(k.slice(5, 7)) + '.' + Number(k.slice(8, 10));
+    const fmtN = (n) => n.toLocaleString('ko-KR');
+    const sumOf = (a) => a.reduce((s, v) => s + v, 0);
+
+    let items = [];
+    let loadError = false;
+    try {
+      const [posts, views] = await Promise.all([listPosts(true), listViews()]);
+      const byId = Object.fromEntries(posts.map((p) => [p.id, p]));
+      items = views.filter((v) => byId[v.id]).map((v) => ({
+        id: v.id, title: byId[v.id].title || '(제목 없음)', cat: byId[v.id].category,
+        daily: keys.map((k) => Number(v.days[k]) || 0)
+      }));
+    } catch (e) {
+      console.warn('조회수를 불러오지 못했어요', e);
+      loadError = true;
+    }
+
+    let range = 30;
+    let selected = null;
+    let current = null;
+    let lineChart = null;
+    let barChart = null;
+    const css = (name) => getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+
+    const summarize = () => {
+      const from = DAYS - range;
+      const rows = items.map((it) => ({
+        id: it.id, title: it.title, cat: it.cat,
+        views: sumOf(it.daily.slice(from)), prev: sumOf(it.daily.slice(from - range, from)), series: it.daily.slice(from)
+      })).filter((r) => r.views > 0 || r.prev > 0).sort((a, b) => b.views - a.views);
+      const total = sumOf(rows.map((r) => r.views));
+      const prevTotal = sumOf(rows.map((r) => r.prev));
+      const daily = keys.slice(from).map((_, i) => sumOf(items.map((it) => it.daily[from + i])));
+      return { rows, total, prevTotal, daily, labels: keys.slice(from).map(dayLabel) };
+    };
+
+    // 마우스 위치에 세로선
+    const crosshair = {
+      id: 'crosshair',
+      afterDatasetsDraw(chart) {
+        const a = chart.tooltip && chart.tooltip.getActiveElements();
+        if (!a || !a.length) return;
+        const { ctx, chartArea } = chart;
+        ctx.save(); ctx.strokeStyle = css('--faint'); ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.moveTo(a[0].element.x, chartArea.top); ctx.lineTo(a[0].element.x, chartArea.bottom); ctx.stroke(); ctx.restore();
+      }
+    };
+    const tooltip = () => ({
+      backgroundColor: css('--ink'), titleColor: '#fff', bodyColor: '#fff', padding: 10, cornerRadius: 6, displayColors: false,
+      titleFont: { family: 'Noto Sans KR', weight: '700' }, bodyFont: { family: 'Noto Sans KR' }
+    });
+    const tick = () => ({ color: css('--faint'), font: { size: 11 } });
+
+    const drawLine = (labels, data) => {
+      const mark = css('--accent');
+      if (lineChart) lineChart.destroy();
+      lineChart = new window.Chart($('[data-stats-line]'), {
+        type: 'line',
+        data: { labels, datasets: [{
+          data, borderColor: mark, borderWidth: 2, backgroundColor: 'rgba(31,79,199,.1)', fill: true, tension: 0.25,
+          pointRadius: (c) => (c.dataIndex === data.length - 1 ? 4 : 0), pointHoverRadius: 5,
+          pointBackgroundColor: mark, pointBorderColor: '#fff', pointBorderWidth: 2
+        }] },
+        options: {
+          responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          interaction: { mode: 'index', intersect: false },
+          plugins: { legend: { display: false }, tooltip: { ...tooltip(), callbacks: { label: (i) => '조회 ' + fmtN(i.parsed.y) + '회' } } },
+          scales: {
+            x: { grid: { display: false }, border: { color: css('--line') }, ticks: { ...tick(), maxRotation: 0, autoSkip: true, maxTicksLimit: 7 } },
+            y: { beginAtZero: true, grid: { color: css('--line') }, border: { display: false }, ticks: { ...tick(), maxTicksLimit: 5, precision: 0 } }
+          }
+        },
+        plugins: [crosshair]
+      });
+    };
+
+    const drawBars = (rows) => {
+      const box = $('[data-stats-bars-box]');
+      box.style.height = Math.max(180, rows.length * 44 + 40) + 'px';
+      const mark = css('--accent');
+      if (barChart) barChart.destroy();
+      barChart = new window.Chart($('[data-stats-bars]'), {
+        type: 'bar',
+        data: {
+          labels: rows.map((r) => (r.title.length > 16 ? r.title.slice(0, 15) + '…' : r.title)),
+          datasets: [{
+            data: rows.map((r) => r.views),
+            backgroundColor: rows.map((r) => (!selected || r.id === selected ? mark : '#C9D5F3')),
+            borderRadius: { topRight: 4, bottomRight: 4 }, borderSkipped: 'start', barThickness: 16
+          }]
+        },
+        options: {
+          indexAxis: 'y', responsive: true, maintainAspectRatio: false, animation: { duration: 300 },
+          layout: { padding: { right: 40 } },
+          plugins: { legend: { display: false }, tooltip: { ...tooltip(), callbacks: {
+            title: (i) => rows[i[0].dataIndex].title,
+            label: (i) => '조회 ' + fmtN(rows[i.dataIndex].views) + '회 · 전체의 ' + Math.round(rows[i.dataIndex].views / (current.total || 1) * 100) + '%'
+          } } },
+          scales: {
+            x: { beginAtZero: true, grid: { color: css('--line') }, border: { display: false }, ticks: { ...tick(), maxTicksLimit: 5, precision: 0 } },
+            y: { grid: { display: false }, border: { color: css('--line') }, ticks: { color: css('--sub'), font: { size: 12 } } }
+          },
+          onClick: (e, els) => { if (els.length) select(selected === rows[els[0].index].id ? null : rows[els[0].index].id); },
+          onHover: (e, els) => { e.native.target.style.cursor = els.length ? 'pointer' : 'default'; }
+        },
+        plugins: [{
+          id: 'tipValue', // 막대 끝에 값
+          afterDatasetsDraw(chart) {
+            const { ctx } = chart;
+            ctx.save(); ctx.fillStyle = css('--ink'); ctx.font = '500 12px "Noto Sans KR", sans-serif'; ctx.textBaseline = 'middle';
+            chart.getDatasetMeta(0).data.forEach((bar, i) => ctx.fillText(fmtN(rows[i].views), bar.x + 6, bar.y));
+            ctx.restore();
+          }
+        }]
+      });
+    };
+
+    const select = (id) => {
+      selected = id && current.rows.some((r) => r.id === id) ? id : null;
+      const row = selected && current.rows.find((r) => r.id === selected);
+      $('[data-stats-target]').textContent = row ? row.title : '전체 글';
+      $('[data-stats-reset]').hidden = !row;
+      drawLine(current.labels, row ? row.series : current.daily);
+      drawBars(current.rows);
+    };
+
+    const render = () => {
+      current = summarize();
+      const s = current;
+      const empty = s.total === 0;
+      $('[data-stats-empty]').hidden = !empty;
+      $('[data-stats-charts]').hidden = empty;
+      $('[data-stats-total]').textContent = fmtN(s.total);
+      const d = $('[data-stats-delta]');
+      if (s.prevTotal) {
+        const diff = s.total - s.prevTotal;
+        d.className = 'delta ' + (diff >= 0 ? 'up' : 'down');
+        d.innerHTML = '';
+        d.append((diff >= 0 ? '▲ ' : '▼ ') + Math.abs(Math.round(diff / s.prevTotal * 100)) + '% ', el('span', null, '직전 ' + range + '일 대비'));
+      } else {
+        d.className = 'delta';
+        d.innerHTML = '';
+        d.append(el('span', null, '직전 ' + range + '일 기록 없음'));
+      }
+      $('[data-stats-avg]').textContent = (s.total / range).toFixed(1);
+      $('[data-stats-days]').textContent = range + '일 기준';
+      $('[data-stats-top]').textContent = s.rows[0] && s.rows[0].views ? s.rows[0].title : '—';
+      $('[data-stats-topv]').textContent = s.rows[0] && s.rows[0].views ? '조회 ' + fmtN(s.rows[0].views) + '회' : '';
+      $('[data-stats-range]').textContent = s.labels[0] + ' ~ ' + s.labels[s.labels.length - 1];
+      const tbody = $('[data-stats-tbody]');
+      tbody.innerHTML = '';
+      s.rows.forEach((r, i) => {
+        const tr = el('tr');
+        const ch = r.prev ? Math.round((r.views - r.prev) / r.prev * 100) : null;
+        const chip = el('span', 'stats-chip ' + (r.cat || ''), CATS[r.cat] || '-');
+        const tdCat = el('td'); tdCat.appendChild(chip);
+        const tdTitle = el('td'); const a = el('a', null, r.title); a.href = 'post.html?id=' + encodeURIComponent(r.id); tdTitle.appendChild(a);
+        tr.append(el('td', null, String(i + 1)), tdTitle, tdCat, el('td', 'n', fmtN(r.views)),
+          el('td', 'n', s.total ? Math.round(r.views / s.total * 100) + '%' : '-'),
+          el('td', 'n', ch == null ? '-' : (ch >= 0 ? '+' : '') + ch + '%'));
+        tbody.appendChild(tr);
+      });
+      if (!empty) select(selected);
+    };
+
+    if (loadError) {
+      $('[data-stats-error]').hidden = false;
+    } else if (!window.Chart) {
+      $('[data-stats-error]').textContent = '그래프를 그리는 도구를 불러오지 못했어요. 새로고침해 주세요.';
+      $('[data-stats-error]').hidden = false;
+    } else {
+      window.Chart.defaults.font.family = '"Noto Sans KR", system-ui, sans-serif';
+      $$('[data-range]').forEach((b) => b.addEventListener('click', () => {
+        range = Number(b.dataset.range);
+        $$('[data-range]').forEach((x) => x.setAttribute('aria-pressed', String(x === b)));
+        render();
+      }));
+      $('[data-stats-reset]').addEventListener('click', () => select(null));
+      $('[data-stats-table-toggle]').addEventListener('click', (e) => {
+        const t = $('[data-stats-table]');
+        const open = t.hidden;
+        t.hidden = !open;
+        e.currentTarget.setAttribute('aria-expanded', String(open));
+        e.currentTarget.textContent = open ? '표 접기 ▴' : '표로 보기 ▾';
+      });
+      render();
+    }
   }
 }
 

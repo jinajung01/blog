@@ -1,5 +1,5 @@
 // Firebase 연결: 구글 로그인(관리자 1명), 글·댓글·좋아요·구독 저장
-import { firebaseConfig, ADMIN_UID } from './firebase-config.js?v=20261118b';
+import { firebaseConfig, ADMIN_UID } from './firebase-config.js?v=20261118c';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const LOGIN_AT = 'blog.loginAt';
@@ -139,6 +139,39 @@ export async function deletePost(id) {
   const comments = await f.F.getDocs(f.F.collection(f.db, 'posts', id, 'comments'));
   await Promise.all(comments.docs.map((c) => f.F.deleteDoc(c.ref)));
   await f.F.deleteDoc(f.F.doc(f.db, 'posts', id));
+  try { await f.F.deleteDoc(f.F.doc(f.db, 'views', id)); } catch (e) {} // 조회수 기록도 함께 삭제
+}
+
+// ---------- 조회수 (관리자 조회수 화면용) ----------
+// views/{글ID} = { total: 전체, last: 마지막 날짜, days: { '2026-11-18': 그날 조회수, … } }
+// 같은 브라우저에서 같은 글은 탭을 닫기 전까지 1번만 셈
+const VIEWED = 'blog.viewed';
+export function kstDay(d = new Date()) {
+  return d.toLocaleDateString('sv-SE', { timeZone: 'Asia/Seoul' }); // YYYY-MM-DD (한국 날짜)
+}
+export async function countView(id) {
+  let seen = [];
+  try { seen = (sessionStorage.getItem(VIEWED) || '').split(','); } catch (e) {}
+  if (seen.includes(id)) return false;
+  const f = await fb();
+  if (!f) return false;
+  const day = kstDay();
+  await f.F.setDoc(f.F.doc(f.db, 'views', id), {
+    total: f.F.increment(1),
+    last: day,
+    days: { [day]: f.F.increment(1) }
+  }, { merge: true });
+  try { sessionStorage.setItem(VIEWED, seen.concat(id).filter(Boolean).join(',')); } catch (e) {}
+  return true;
+}
+export async function listViews() {
+  const f = await fb();
+  if (!f) return [];
+  const snap = await f.F.getDocs(f.F.collection(f.db, 'views'));
+  return snap.docs.map((d) => {
+    const x = d.data();
+    return { id: d.id, total: typeof x.total === 'number' ? x.total : 0, days: x.days && typeof x.days === 'object' ? x.days : {} };
+  });
 }
 
 // ---------- 좋아요 (브라우저마다 1번) ----------
