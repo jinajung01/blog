@@ -4,7 +4,7 @@ import {
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime, countView, listViews, kstDay
-} from './data.js?v=20261118c';
+} from './data.js?v=20261119a';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -152,11 +152,20 @@ if (subForm) {
 const recent = $('[data-recent]');
 if (recent) {
   const posts = (await visiblePosts()).filter((p) => p.status === 'published');
-  // 카테고리별 글 수
+  const catChip = (p) => el('span', 'cat-chip tint-' + p.category, CATS[p.category] || '');
+  // 카테고리별 글 수 (카테고리 카드 + 첫 화면 '기록 현황')
   $$('[data-cat-count]').forEach((n) => {
     const c = posts.filter((p) => p.category === n.dataset.catCount).length;
-    n.textContent = c ? '· ' + c + '개' : '';
+    n.textContent = c + '편';
+    const go = $('[data-cat-go="' + n.dataset.catCount + '"]');
+    if (go && !c) { go.textContent = '첫 글을 준비 중이에요'; go.classList.add('is-empty'); }
   });
+  if (posts.length) {
+    $('[data-stat-total]').textContent = posts.length;
+    $$('[data-stat-cat]').forEach((n) => { n.textContent = posts.filter((p) => p.category === n.dataset.statCat).length; });
+    $('[data-stat-last]').textContent = '마지막 발행 ' + fmtDate(posts[0].date);
+    $('[data-hero-stats]').hidden = false;
+  }
   // 추천 글 = 가장 최근 글
   const f = posts[0];
   if (f) {
@@ -165,7 +174,10 @@ if (recent) {
     setCover($('[data-f-cover]'), f.cover).classList.add('tint-' + f.category);
     $('[data-f-cover]').href = postHref(f);
     markLink($('[data-f-cover]'), f, 'home_featured');
-    const cat = $('[data-f-cat]'); cat.textContent = '최신 글 · ' + (CATS[f.category] || '');
+    const cat = $('[data-f-cat]');
+    cat.className = 'featured-label';
+    cat.textContent = '';
+    cat.append(catChip(f), el('span', null, '최신 글'));
     const b = badge(f); if (b) cat.appendChild(b);
     $('[data-f-title]').textContent = f.title;
     $('[data-f-excerpt]').textContent = excerpt(f.body);
@@ -175,12 +187,14 @@ if (recent) {
   }
   const rest = posts.slice(1, 4);
   rest.forEach((p) => {
-    const a = el('a', 'post-card');
+    const a = el('a', 'recent-row');
     a.href = postHref(p);
-    a.appendChild(coverBox('cover', p));
+    a.appendChild(coverBox('thumb', p));
     const body = el('div', 'body');
-    body.append(catLine(p), el('h3', null, p.title), el('span', 'meta', fmtDate(p.date) + ' · ' + readTime(p.body)));
-    a.appendChild(body);
+    body.append(catChip(p), el('h3', null, p.title));
+    const ex = excerpt(p.body);
+    if (ex) body.appendChild(el('p', null, ex));
+    a.append(body, el('span', 'meta', fmtDate(p.date) + ' · ' + readTime(p.body)));
     recent.appendChild(markLink(a, p, 'home_recent'));
   });
   if (!posts.length) $('[data-recent-empty]').hidden = false;

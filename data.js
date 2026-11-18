@@ -1,5 +1,5 @@
 // Firebase 연결: 구글 로그인(관리자 1명), 글·댓글·좋아요·구독 저장
-import { firebaseConfig, ADMIN_UID } from './firebase-config.js?v=20261118c';
+import { firebaseConfig, ADMIN_UID } from './firebase-config.js?v=20261119a';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const LOGIN_AT = 'blog.loginAt';
