@@ -72,3 +72,11 @@
 - 이유: 파일 이름이 성공·실패 로그인데 성공이 빠져 있었고, 무엇을 해서 됐는지 남겨야
   테스트 보고서와 회고에 근거로 쓸 수 있음
 - 영향: CLAUDE.md 로그 규칙 수정, success-fail-log.md 형식 변경, F-01·S-01·S-02 기록
+
+## D-12 | 2026-11-24 | Claude API로 바꾸지 않고 Gemini 유지 (D-04 재확인)
+- 결정: AI는 계획대로 Firebase AI Logic + Gemini Developer API로 진행
+- 대안: Claude API로 변경
+- 이유: 블로그는 GitHub Pages라 코드에 Claude 키를 넣으면 누구나 볼 수 있음. 키를 숨기려면
+  별도 서버(Vercel 서버리스 함수 등)와 유료 API 요금이 필요해 마감(11/25) 전 일정에 부담.
+  Firebase AI Logic은 Gemini 키를 Firebase 서버가 보관하고 App Check로 요청을 확인함
+- 영향: 기술 결정·PRD 변경 없음. 키는 Firebase 콘솔에서만 관리하고 코드·채팅에 넣지 않음
