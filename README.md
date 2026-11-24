@@ -2,6 +2,21 @@
 
 HTML·CSS·자바스크립트로만 만든 블로그입니다. 따로 설치할 것 없이 `index.html`을 브라우저로 열면 바로 볼 수 있습니다.
 
+## 미니 프로젝트: AI 초안 도우미
+
+수업 메모·실습 내용을 넣으면 빠진 맥락을 최대 3개 묻고, 블로그 글 초안으로 정리해 글쓰기 칸에 채워 주는 관리자 전용 챗봇입니다.
+배포 주소: https://jinajung01.github.io/blog/write.html (관리자 로그인 필요)
+
+| 항목 | 위치 |
+|------|------|
+| PRD (기획서) | [docs/PRD.md](docs/PRD.md) |
+| 테스트 보고서 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) (스크린샷: [docs/screenshots](docs/screenshots)) |
+| 에이전트용 지침 | [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) (Claude Code는 [CLAUDE.md](CLAUDE.md)를 통해 불러옴) |
+| 의사결정 로그 | [logs/decision-log.md](logs/decision-log.md) |
+| 성공·실패 로그 | [logs/success-fail-log.md](logs/success-fail-log.md) |
+| 소스코드 | [chatbot.js](chatbot.js) (챗봇 기능 전체), [write.html](write.html)·[style.css](style.css)·[main.js](main.js) (글쓰기 화면 연결), [firebase-config.js](firebase-config.js) (App Check 사이트 키) |
+| 단위테스트 | [tests/chatbot.test.mjs](tests/chatbot.test.mjs) — 실행: `node --test tests/` |
+
 ## 폴더 구성
 
 | 파일 | 내용 |
@@ -13,6 +28,7 @@ HTML·CSS·자바스크립트로만 만든 블로그입니다. 따로 설치할 
 | `login.html` | 관리자 로그인 화면 |
 | `style.css` | 전체 디자인 |
 | `main.js` | 버튼·검색 같은 화면 동작 |
+| `chatbot.js` | 글쓰기 화면의 AI 초안 도우미 (Firebase AI Logic + App Check) |
 | `data.js` | Firebase 연결 (구글 로그인, 글 저장·불러오기) |
 | `firebase-config.js` | Firebase 설정값과 관리자 계정 ID |
 | `firestore.rules` | 관리자만 글을 쓰고, 나만 보기·임시저장 글은 관리자만 읽게 막는 보안 규칙 |
