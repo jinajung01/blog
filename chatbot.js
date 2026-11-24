@@ -166,6 +166,23 @@ export function initChatbot({ applyDraft, track }) {
   };
   const refreshSkip = () => { skipBtn.hidden = !chat || hasDraft; };
 
+  // 패널 안에 보이는 확인 줄 (브라우저 confirm 창 대신)
+  const ask = (text, okLabel, onOk, onCancel) => {
+    const box = el('div', 'ai-confirm');
+    box.setAttribute('role', 'alertdialog');
+    box.appendChild(el('p', null, text));
+    const row = el('div', 'ai-confirm-row');
+    const no = el('button', 'btn btn-soft', '취소');
+    const ok = el('button', 'btn btn-accent', okLabel);
+    no.type = 'button'; ok.type = 'button';
+    no.addEventListener('click', () => { box.remove(); if (onCancel) onCancel(); });
+    ok.addEventListener('click', () => { box.remove(); onOk(); });
+    row.append(no, ok);
+    box.appendChild(row);
+    setTimeout(() => ok.focus(), 0);
+    return box;
+  };
+
   const drawDraft = (d) => {
     const card = el('div', 'ai-draft');
     card.appendChild(el('p', 'ai-draft-label', '초안'));
@@ -177,12 +194,23 @@ export function initChatbot({ applyDraft, track }) {
     card.appendChild(el('div', 'ai-draft-body', d.body));
     const use = el('button', 'btn btn-accent', '이 초안 넣기');
     use.type = 'button';
+    const done = () => {
+      use.textContent = '다시 넣기';
+      use.classList.replace('btn-accent', 'btn-soft');
+      say('bot', '글쓰기 칸에 넣었어요. 확인한 뒤 임시저장이나 발행을 눌러 주세요. 더 고치고 싶으면 여기서 말해 주세요.');
+      track('ai_draft_apply');
+    };
     use.addEventListener('click', () => {
-      if (applyDraft(d)) {
-        use.textContent = '넣었어요 ✓';
-        say('bot', '글쓰기 칸에 넣었어요. 확인한 뒤 임시저장이나 발행을 눌러 주세요. 더 고치고 싶으면 여기서 말해 주세요.');
-        track('ai_draft_apply');
-      }
+      const r = applyDraft(d, false);
+      if (r === true) { done(); return; }
+      if (r !== 'confirm') return;
+      // 쓰던 내용이 있으면 카드 안에서 한 번 더 확인
+      use.hidden = true;
+      card.appendChild(ask('지금 쓰던 제목·본문을 이 초안으로 바꿀까요?', '바꾸기', () => {
+        use.hidden = false;
+        if (applyDraft(d, true) === true) done();
+      }, () => { use.hidden = false; }));
+      scroll();
     });
     card.appendChild(use);
     log.appendChild(card);
@@ -251,8 +279,11 @@ export function initChatbot({ applyDraft, track }) {
   openBtn.addEventListener('click', () => open(panel.hidden));
   $('[data-ai-close]', panel).addEventListener('click', () => open(false));
   $('[data-ai-reset]', panel).addEventListener('click', () => {
-    if (log.children.length > 1 && !confirm('지금 대화를 지우고 새로 시작할까요?')) return;
-    reset();
+    if (log.children.length <= 1) { reset(); return; }
+    if ($('.ai-confirm-reset', panel)) return; // 이미 묻는 중
+    const box = ask('지금 대화를 지우고 새로 시작할까요? (글쓰기 칸에 넣은 내용은 그대로 남아요)', '새로 시작', reset);
+    box.classList.add('ai-confirm-reset');
+    form.before(box);
   });
   panel.addEventListener('keydown', (e) => { if (e.key === 'Escape') open(false); });
   form.addEventListener('submit', (e) => { e.preventDefault(); send(input.value, false); });

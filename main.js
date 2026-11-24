@@ -647,8 +647,10 @@ if (document.body.classList.contains('write-page')) {
 
     // ---- AI 초안 도우미 (관리자 확인 뒤에만 불러옴) ----
     // 초안은 글쓰기 칸만 채우고, 저장은 기존 임시저장·발행 버튼으로 한다
-    const applyDraft = (d) => {
-      if ((title.value.trim() || body.value.trim()) && !confirm('지금 쓰던 제목·본문을 AI 초안으로 바꿀까요?')) return false;
+    // 쓰던 내용이 있으면 'confirm'을 돌려주고, 패널에서 "바꾸기"를 누르면 force=true로 다시 부름
+    // (브라우저 확인 창 confirm()은 막히는 환경이 있어 쓰지 않음)
+    const applyDraft = (d, force) => {
+      if (!force && (title.value.trim() || body.value.trim())) return 'confirm';
       title.value = d.title;
       body.value = (d.summary ? '> 요약: ' + d.summary + '\n\n' : '') + d.body;
       if (CATS[d.category]) catSel.value = d.category;
@@ -658,7 +660,7 @@ if (document.body.classList.contains('write-page')) {
       saveState.textContent = 'AI 초안 넣음 · 아직 저장 안 됨';
       return true;
     };
-    import('./chatbot.js?v=20261124a')
+    import('./chatbot.js?v=20261124b')
       .then((m) => m.initChatbot({ applyDraft, track }))
       .catch((e) => console.warn('AI 초안 도우미를 불러오지 못했어요', e));
 
