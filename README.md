@@ -11,7 +11,7 @@ HTML·CSS·자바스크립트로만 만든 블로그입니다. 따로 설치할 
 |------|------|
 | PRD (기획서) | [docs/PRD.md](docs/PRD.md) |
 | 테스트 보고서 | [docs/TEST_REPORT.md](docs/TEST_REPORT.md) (스크린샷: [docs/screenshots](docs/screenshots)) |
-| 에이전트용 지침 | [docs/AGENT_GUIDE.md](docs/AGENT_GUIDE.md) (Claude Code는 [CLAUDE.md](CLAUDE.md)를 통해 불러옴) |
+| 에이전트용 지침 | [AGENTS.md](AGENTS.md) (Claude Code는 [CLAUDE.md](CLAUDE.md)를 통해 불러옴) |
 | 의사결정 로그 | [logs/decision-log.md](logs/decision-log.md) |
 | 성공·실패 로그 | [logs/success-fail-log.md](logs/success-fail-log.md) |
 | 소스코드 | [chatbot.js](chatbot.js) (챗봇 기능 전체), [write.html](write.html)·[style.css](style.css)·[main.js](main.js) (글쓰기 화면 연결), [firebase-config.js](firebase-config.js) (App Check 사이트 키) |

@@ -1,6 +1,6 @@
-# 에이전트용 지침 (Claude Code용)
+# 에이전트용 지침 (AGENTS.md)
 
-> 저장소 맨 위의 CLAUDE.md가 이 파일을 불러와서, Claude Code가 작업할 때 자동으로 적용됩니다.
+> 여러 AI 코딩 도구가 읽는 표준 위치(저장소 맨 위)의 지침입니다. Claude Code는 CLAUDE.md가 이 파일을 불러와서 적용됩니다.
 
 ## 프로젝트 개요
 - 수업 미니프로젝트: 내 블로그에 AI 기능으로 워크플로우 자동화하기
@@ -36,7 +36,7 @@
 ## 마감과 필수 산출물
 - 최종 제출: 2026-11-25(수) 16:50. 이후 커밋 불가
 - 필수: 배포 URL, docs/PRD.md(2p 이하), docs/TEST_REPORT.md(2p 이하, 유저플로우
-  스크린샷 + 기능별 단위테스트), 소스코드, 이 파일(docs/AGENT_GUIDE.md), logs/decision-log.md,
+  스크린샷 + 기능별 단위테스트), 소스코드, 이 파일(AGENTS.md), logs/decision-log.md,
   logs/success-fail-log.md
 - 테스트 필수 케이스: 강의만 / 실습만 / 섞인 입력 / 질문 건너뛰기 / 비로그인 접근
 - Gemini 하루 한도는 한국 시간 오후 5시쯤 초기화. 테스트를 11/24에 나눠서 한다
