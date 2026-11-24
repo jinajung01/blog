@@ -1,5 +1,5 @@
 // AI 초안 도우미 단위테스트 — 실행: node --test tests/
-// AI 답변(JSON)을 화면에 보여 주기 전에 규칙대로 정리하는지 확인한다 (PRD "5. 기능 요구사항"의 AI 규칙)
+// AI 답변(JSON)을 화면에 보여 주기 전에 규칙대로 정리하는지 확인한다 (PRD "6. 기능적 요구사항"의 AI 규칙)
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 

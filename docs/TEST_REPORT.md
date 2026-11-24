@@ -1,7 +1,7 @@
 # 테스트 보고서 v1.0 — 수업 기록 → 블로그 초안 정리 챗봇
 
 ## 1. 개요
-2026-11-24 · 작성자 정지나 · 기준 문서 docs/PRD.md v1.0 · 환경: 배포 주소 https://jinajung01.github.io/blog/write.html,
+2026-11-24 · 작성자 정지나 · 기준 문서 docs/PRD.md v1.1 · 환경: 배포 주소 https://jinajung01.github.io/blog/write.html,
 Chrome(PC 1280×800), 관리자 로그인, Firebase AI Logic(gemini-3.5-flash-lite) + App Check(reCAPTCHA Enterprise)
 
 ## 2. 유저플로우
@@ -39,4 +39,4 @@ Chrome(PC 1280×800), 관리자 로그인, Firebase AI Logic(gemini-3.5-flash-li
 ## 5. 남은 한계와 다음 확인
 - 카테고리 추천: 개발 실습 글을 '디자인'으로 추천한 경우가 있음 → 넣은 뒤 직접 확인 필요
 - 사실 덧붙임: 실습 초안에 말하지 않은 단어("모바일")를 덧붙인 경우 1회 → 초안 확인 후 저장
-- 지표(PRD 4. 가설 및 지표): 맥락 유지율·실습 기록률 변화는 실제 수업 기록을 쌓은 뒤 측정 (현재값 확인 필요)
+- 지표(PRD 5. 가설 및 지표): 맥락 유지율·실습 기록률 변화는 실제 수업 기록을 쌓은 뒤 측정 (현재값 확인 필요)
