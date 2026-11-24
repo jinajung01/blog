@@ -1,16 +1,25 @@
-# 테스트 보고서 v1.0 — 수업 기록 → 블로그 초안 정리 챗봇
+# 테스트 보고서 v1.1 — 수업 기록 → 블로그 초안 정리 챗봇
 
 ## 1. 개요
 2026-11-24 · 작성자 정지나 · 기준 문서 docs/PRD.md v1.1 · 환경: 배포 주소 https://jinajung01.github.io/blog/write.html,
 Chrome(PC 1280×800), 관리자 로그인, Firebase AI Logic(gemini-3.5-flash-lite) + App Check(reCAPTCHA Enterprise)
 
 ## 2. 유저플로우
-<p><img src="screenshots/02-questions.jpg" width="49%" alt="강의 메모 입력 후 질문 3개"> <img src="screenshots/03-draft.jpg" width="49%" alt="답변 후 초안 카드"></p>
-<p><img src="screenshots/04-applied.jpg" width="49%" alt="초안 넣기 후 글쓰기 칸"> <img src="screenshots/05-mixed-input.jpg" width="49%" alt="섞인 입력 초안"></p>
+**① 강의 메모 입력 → 질문 3개** 글쓰기 화면의 **AI 초안** → 메모를 보내면 강의로 구분하고 설명 없는 키워드를 묻는다
 
-① 글쓰기 화면의 **AI 초안** → 강의 메모 입력 → 강의로 구분하고 질문 3개 ② 한 번에 답하면 답을 반영한 초안 카드
-③ **이 초안 넣기** → 제목·본문(맨 위 요약)·카테고리·태그가 채워지고 "아직 저장 안 됨" → 기존 임시저장·발행으로 저장
-④ 관련 없는 강의·실습이 섞인 입력은 글 1개 안에서 `## 강의`·`## 실습` 소제목으로 나뉨
+<p><img src="screenshots/02-questions.jpg" width="62%" alt="강의 메모 입력 후 질문 3개"></p>
+
+**② 답변 → 초안 카드** 한 번에 답하면 답을 반영한 초안(제목·요약·카테고리·태그·본문)이 나온다
+
+<p><img src="screenshots/03-draft.jpg" width="62%" alt="답변 후 초안 카드"></p>
+
+**③ 이 초안 넣기 → 저장** 제목·본문(맨 위 요약)·카테고리·태그가 채워지고 "아직 저장 안 됨" → 기존 임시저장·발행으로 저장
+
+<p><img src="screenshots/04-applied.jpg" width="62%" alt="초안 넣기 후 글쓰기 칸"></p>
+
+**④ 섞인 입력** 관련 없는 강의·실습을 함께 넣어도 글 1개, 안에서 `## 강의`·`## 실습` 소제목으로 나뉜다
+
+<p><img src="screenshots/05-mixed-input.jpg" width="62%" alt="섞인 입력 초안"></p>
 
 ## 3. 기능별 테스트 (배포 주소, 실제 AI 호출)
 | ID | 케이스 (PRD 기능) | 입력·조작 | 기대 결과 | 결과 |
@@ -27,6 +36,7 @@ Chrome(PC 1280×800), 관리자 로그인, Firebase AI Logic(gemini-3.5-flash-li
 **자동 단위테스트** `node --test tests/` — 6개 모두 통과: 질문 최대 3개, 초안이 있으면 질문 무시,
 카테고리 기획·디자인만, 태그 정리(# 제거·중복 제거), 빈 본문은 초안 아님, JSON이 아닌 답변 오류 처리
 **응답 시간** 질문·초안 모두 1.7~2.5초 (배포 주소에서 13회 측정)
+**PRD 가설 H4 (모드 선택 없이 강의·실습 구분)** 구분 정확도 4건 중 4건 — 강의(T1)·실습(T2)·섞인 입력(T3·T4) 모두 맞게 구분
 
 ## 4. 발견한 문제와 조치 (logs/success-fail-log.md)
 | 번호 | 문제 | 조치 |
