@@ -630,3 +630,41 @@ button, input, textarea, select { font: inherit; }
   .section-head .more-link { padding: 0; }
   .logo { display: inline-flex; align-items: center; min-height: 44px; }
 }
+
+/* ===== AI 초안 도우미 (글쓰기 화면, 관리자 전용) ===== */
+.ai-open-btn { border-color: var(--accent); color: var(--accent); }
+.ai-open-btn:hover { color: var(--accent-dark); background: var(--soft); }
+.ai-open-btn[aria-expanded="true"] { background: var(--blue); }
+.ai-panel {
+  position: fixed; top: 0; right: 0; bottom: 0; z-index: 50;
+  width: min(420px, 100%); display: flex; flex-direction: column;
+  background: #fff; border-left: 1px solid var(--line); box-shadow: -8px 0 24px rgba(22, 24, 29, .08);
+}
+.ai-panel[hidden] { display: none; }
+.ai-head { display: flex; align-items: center; gap: 4px; padding: 10px 8px 10px 20px; border-bottom: 1px solid var(--line); }
+.ai-head h2 { margin: 0 auto 0 0; font-family: var(--font-title); font-size: 16px; font-weight: 700; color: var(--ink); }
+.ai-close { width: 44px; height: 44px; display: inline-flex; align-items: center; justify-content: center; border: 0; border-radius: 8px; background: transparent; color: var(--sub); cursor: pointer; }
+.ai-close:hover { background: var(--gray); }
+.ai-log { flex: 1; overflow-y: auto; padding: 16px 20px; display: flex; flex-direction: column; gap: 12px; background: var(--gray); }
+.ai-msg { max-width: 92%; padding: 10px 14px; border-radius: 12px; font-size: 14px; line-height: 1.6; white-space: pre-wrap; overflow-wrap: anywhere; }
+.ai-bot { align-self: flex-start; background: #fff; border: 1px solid var(--line); color: var(--text); }
+.ai-me { align-self: flex-end; background: var(--accent); color: #fff; }
+.ai-wait { color: var(--faint); }
+.ai-error { border-color: #F2B8B5; background: #FDECEC; color: var(--danger); }
+.ai-questions { margin: 8px 0 0; padding-left: 20px; white-space: normal; }
+.ai-questions li + li { margin-top: 4px; }
+.ai-hint { margin: 6px 0 0; font-size: 12px; color: var(--faint); white-space: normal; }
+.ai-draft { align-self: stretch; padding: 16px; border: 1px solid var(--line-strong); border-radius: 12px; background: #fff; display: flex; flex-direction: column; gap: 8px; }
+.ai-draft-label { margin: 0; font-size: 12px; font-weight: 700; color: var(--accent); }
+.ai-draft-title { margin: 0; font-family: var(--font-title); font-size: 17px; line-height: 1.4; color: var(--ink); }
+.ai-draft-summary { margin: 0; padding-left: 10px; border-left: 3px solid var(--blue); font-size: 14px; color: var(--sub); }
+.ai-draft-meta { margin: 0; font-size: 13px; color: var(--muted); }
+.ai-draft-body { max-height: 280px; overflow-y: auto; padding: 10px 12px; border-radius: 8px; background: var(--soft); font-size: 13px; line-height: 1.7; white-space: pre-wrap; overflow-wrap: anywhere; color: var(--text); }
+.ai-draft .btn { align-self: flex-end; height: 40px; }
+.ai-form { padding: 12px 20px 16px; border-top: 1px solid var(--line); }
+.ai-form textarea { width: 100%; resize: vertical; min-height: 88px; max-height: 40vh; padding: 10px 12px; border: 1px solid var(--field); border-radius: 8px; font: inherit; font-size: 14px; line-height: 1.6; }
+.ai-form textarea:focus { outline: 2px solid var(--accent); outline-offset: 1px; border-color: var(--accent); }
+.ai-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
+.ai-actions .btn { height: 44px; }
+.ai-actions .btn:disabled { opacity: .6; cursor: wait; }
+@media (min-width: 1100px) { body.ai-open .write-main { margin-right: 420px; } }

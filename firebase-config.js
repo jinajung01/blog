@@ -10,6 +10,11 @@ export const firebaseConfig = {
   appId: '1:881829861855:web:88dc0b35e56035a11bcc6a'
 };
 
+// AI 초안 도우미(chatbot.js)용 App Check 키 — Firebase 콘솔 [App Check → 앱 → reCAPTCHA Enterprise]에
+// 등록한 웹 사이트 키를 넣습니다. 페이지에 공개되는 사이트 키라 코드에 있어도 괜찮습니다.
+// (Gemini API 키는 Firebase 콘솔이 관리하므로 코드에 넣지 않습니다)
+export const RECAPTCHA_ENTERPRISE_KEY = '6Lfhni8uAAAAABsE_Mzx4YxVUeBj0I4lh_ue8kDz';
+
 // 관리자 구글 계정의 사용자 ID(UID) 1개 — 처음 로그인하면 로그인 화면에 표시됩니다.
 // firestore.rules 안의 같은 값도 함께 바꿔야 합니다.
 export const ADMIN_UID = '5O7QPzPsnLUSRNf9fefKpNEYayW2';

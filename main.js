@@ -645,6 +645,23 @@ if (document.body.classList.contains('write-page')) {
     count(); drawTags(); drawCover();
     document.body.removeAttribute('data-guard');
 
+    // ---- AI 초안 도우미 (관리자 확인 뒤에만 불러옴) ----
+    // 초안은 글쓰기 칸만 채우고, 저장은 기존 임시저장·발행 버튼으로 한다
+    const applyDraft = (d) => {
+      if ((title.value.trim() || body.value.trim()) && !confirm('지금 쓰던 제목·본문을 AI 초안으로 바꿀까요?')) return false;
+      title.value = d.title;
+      body.value = (d.summary ? '> 요약: ' + d.summary + '\n\n' : '') + d.body;
+      if (CATS[d.category]) catSel.value = d.category;
+      tags = d.tags.slice(0, 20);
+      drawTags(); count();
+      [title, body, catSel].forEach((x) => x.classList.remove('field-error'));
+      saveState.textContent = 'AI 초안 넣음 · 아직 저장 안 됨';
+      return true;
+    };
+    import('./chatbot.js?v=20261124a')
+      .then((m) => m.initChatbot({ applyDraft, track }))
+      .catch((e) => console.warn('AI 초안 도우미를 불러오지 못했어요', e));
+
     body.addEventListener('input', count);
     tagForm.addEventListener('submit', (e) => { // AC-08
       e.preventDefault();
