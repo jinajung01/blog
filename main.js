@@ -660,7 +660,7 @@ if (document.body.classList.contains('write-page')) {
       saveState.textContent = 'AI 초안 넣음 · 아직 저장 안 됨';
       return true;
     };
-    import('./chatbot.js?v=20261124b')
+    import('./chatbot.js?v=20261124c')
       .then((m) => m.initChatbot({ applyDraft, track }))
       .catch((e) => console.warn('AI 초안 도우미를 불러오지 못했어요', e));
 

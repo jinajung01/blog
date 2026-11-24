@@ -667,7 +667,8 @@ button, input, textarea, select { font: inherit; }
 .ai-actions { display: flex; justify-content: flex-end; gap: 8px; margin-top: 10px; }
 .ai-actions .btn { height: 44px; }
 .ai-actions .btn:disabled { opacity: .6; cursor: wait; }
-@media (min-width: 1100px) { body.ai-open .write-main { margin-right: 420px; } }
+/* PC에서는 패널 너비만큼 화면 전체(헤더 포함)를 왼쪽으로 줄여 임시저장·발행 버튼이 가려지지 않게 함 */
+@media (min-width: 1100px) { body.ai-open { padding-right: 420px; } }
 .ai-confirm { padding: 12px 14px; border: 1px solid var(--accent); border-radius: 10px; background: var(--soft); font-size: 14px; color: var(--text); }
 .ai-confirm p { margin: 0 0 10px; line-height: 1.5; }
 .ai-confirm-row { display: flex; justify-content: flex-end; gap: 8px; }
