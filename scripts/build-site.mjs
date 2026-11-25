@@ -95,7 +95,7 @@ for (const p of posts) {
     articleSection: cat || undefined, keywords: p.tags.join(', ') || undefined,
     author: { '@type': 'Person', name: 'zn' },
     publisher: { '@type': 'Organization', name: 'zn' },
-    image: SITE + 'og-image.png'
+    image: SITE + 'assets/zn-blog-og.png'
   };
   const head = `  <meta name="description" content="${esc(desc)}">
   <link rel="canonical" href="${pageUrl}">
@@ -109,11 +109,12 @@ for (const p of posts) {
   <meta property="article:published_time" content="${p.published.toISOString()}">
   <meta property="article:modified_time" content="${p.updated.toISOString()}">
   ${cat ? `<meta property="article:section" content="${esc(cat)}">` : ''}
-  <meta property="og:image" content="https://jinajung01.github.io/blog/og-image.png">
+  <meta property="og:image" content="https://jinajung01.github.io/blog/assets/zn-blog-og.png">
   <meta property="og:image:width" content="1200">
   <meta property="og:image:height" content="630">
   <meta property="og:image:alt" content="zn blog">
   <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:image" content="https://jinajung01.github.io/blog/assets/zn-blog-og.png">
   <script type="application/ld+json">${JSON.stringify(ld).replace(/</g, '\\u003c')}</script>`;
 
   let html = template;
