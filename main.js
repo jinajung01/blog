@@ -77,7 +77,12 @@ const catLine = (p, prefix) => {
   const b = badge(p); if (b) n.appendChild(b);
   return n;
 };
-const coverBox = (cls, p) => setCover(el('div', cls + ' placeholder tint-' + (p.status === 'draft' ? 'draft' : p.category), '커버 이미지'), p.cover);
+// 대표 이미지가 없으면 카테고리 색 상자만 보여 줌 (글자 없이)
+const coverBox = (cls, p) => {
+  const box = el('div', cls + ' placeholder tint-' + (p.status === 'draft' ? 'draft' : p.category));
+  box.setAttribute('aria-hidden', 'true');
+  return setCover(box, p.cover);
+};
 const ago = (d) => {
   const s = (Date.now() - d) / 1000;
   if (s < 60) return '방금';
@@ -171,7 +176,10 @@ if (recent) {
   if (f) {
     const box = $('[data-featured]');
     box.hidden = false;
-    setCover($('[data-f-cover]'), f.cover).classList.add('tint-' + f.category);
+    const fCover = $('[data-f-cover]');
+    fCover.textContent = ''; // 대표 이미지가 없을 때 '대표 이미지' 글자 대신 색 상자만
+    fCover.setAttribute('aria-label', f.title);
+    setCover(fCover, f.cover).classList.add('tint-' + f.category);
     $('[data-f-cover]').href = postHref(f);
     markLink($('[data-f-cover]'), f, 'home_featured');
     const cat = $('[data-f-cat]');
@@ -661,7 +669,7 @@ if (document.body.classList.contains('write-page')) {
       return true;
     };
     let aiChat = null; // 글이 처음 저장되면 대화 기록을 그 글에 연결하기 위함
-    import('./chatbot.js?v=20261125b')
+    import('./chatbot.js?v=20261125c')
       .then((m) => { aiChat = m.initChatbot({ applyDraft, track, getPostId: () => postId }); })
       .catch((e) => console.warn('AI 초안 도우미를 불러오지 못했어요', e));
 
