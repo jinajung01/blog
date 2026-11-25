@@ -87,7 +87,7 @@
 - 레퍼런스: 기존 블로그 디자인 · 프로토타입: https://jinajung01.github.io/blog/write.html
 
 ## 9. 출시 및 운영 전략
-- 범위 F1~F9 · 출시: GitHub Pages 자동 배포 · 테스트 9건 → docs/TEST_REPORT.md
+- 범위 F1~F9 · 출시: GitHub Pages 자동 배포 · 테스트 9건 → docs/TEST_REPORT.md · 평가용 테스트 계정(AI 초안 체험만, 저장 불가)
 - 리스크: 구분·카테고리 오류 → 테스트·F7 / 한도 소진 → 분산 테스트 / 지어낸 내용 → 넣기 전 확인
 
 ## 10. 일정 및 리소스
