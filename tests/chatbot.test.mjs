@@ -31,6 +31,11 @@ test('F6 태그는 # 제거, 빈 값·중복 제거', () => {
   assert.deepEqual(r.draft.tags, ['a', 'b']);
 });
 
+test('F6 카테고리 이름(기획·디자인·회고)은 태그에서 뺀다', () => {
+  const r = reply({ kind: 'lecture', reply: '', questions: [], draft: { title: 't', summary: '', body: 'b', category: 'plan', tags: ['#기획', 'GA4', '디자인', '회고', 'Amplitude'] } });
+  assert.deepEqual(r.draft.tags, ['GA4', 'Amplitude']);
+});
+
 test('본문이 비어 있으면 초안으로 보지 않는다', () => {
   const r = reply({ kind: 'practice', reply: '', questions: [], draft: { title: 't', summary: '', body: '  ', category: 'design', tags: [] } });
   assert.equal(r.draft, null);
