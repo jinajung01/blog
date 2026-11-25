@@ -1,5 +1,5 @@
 // Firebase 연결: 구글 로그인(관리자 1명), 글·댓글·좋아요·구독 저장
-import { firebaseConfig, ADMIN_UID, TESTER_UIDS } from './firebase-config.js?v=20261125e';
+import { firebaseConfig, ADMIN_UID, EXTRA_ADMIN_UIDS } from './firebase-config.js?v=20261125f';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const LOGIN_AT = 'blog.loginAt';
@@ -31,13 +31,11 @@ export const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
 
-// 테스트 계정: AI 초안 도우미 체험만 가능 (저장은 Firestore 규칙에서도 막힘)
-export function isTester(user) {
-  return !!(user && Array.isArray(TESTER_UIDS) && TESTER_UIDS.includes(user.uid));
-}
-
+// 관리자: 주 관리자(구글) + 평가용 테스트 계정(이메일) — 둘 다 같은 권한
 export function isAdmin(user) {
-  return !!(user && ADMIN_UID && user.uid === ADMIN_UID);
+  if (!user) return false;
+  return (!!ADMIN_UID && user.uid === ADMIN_UID)
+    || (Array.isArray(EXTRA_ADMIN_UIDS) && EXTRA_ADMIN_UIDS.includes(user.uid));
 }
 
 // ---------- 로그인 ----------
