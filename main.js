@@ -660,8 +660,9 @@ if (document.body.classList.contains('write-page')) {
       saveState.textContent = 'AI 초안 넣음 · 아직 저장 안 됨';
       return true;
     };
-    import('./chatbot.js?v=20261124c')
-      .then((m) => m.initChatbot({ applyDraft, track }))
+    let aiChat = null; // 글이 처음 저장되면 대화 기록을 그 글에 연결하기 위함
+    import('./chatbot.js?v=20261125b')
+      .then((m) => { aiChat = m.initChatbot({ applyDraft, track, getPostId: () => postId }); })
       .catch((e) => console.warn('AI 초안 도우미를 불러오지 못했어요', e));
 
     body.addEventListener('input', count);
@@ -692,6 +693,7 @@ if (document.body.classList.contains('write-page')) {
       showError(''); busy(true);
       try {
         postId = await savePost(postId, collect(), false, false);
+        if (aiChat) aiChat.onSaved(postId);
         wasPublished = false;
         history.replaceState(null, '', 'write.html?id=' + encodeURIComponent(postId));
         $('[data-write-delete]').hidden = false;
@@ -712,6 +714,7 @@ if (document.body.classList.contains('write-page')) {
       showError(''); busy(true);
       try {
         postId = await savePost(postId, data, true, !wasPublished);
+        if (aiChat) aiChat.onSaved(postId);
         location.href = 'post.html?id=' + encodeURIComponent(postId); // AC-10
       } catch (e) { saveErr(e, '발행'); busy(false); }
     });
