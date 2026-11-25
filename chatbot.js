@@ -343,8 +343,8 @@ export function initChatbot({ applyDraft, track, getPostId }) {
   } else if (hasSaved) {
     // 새 글: 깨끗한 화면으로 시작하고, 글을 저장하지 않고 나간 지난 대화는 버튼으로 불러옴
     restoreBar = el('div', 'ai-restore');
-    restoreBar.appendChild(el('p', null, '글을 저장하지 않고 나간 지난번 대화가 있어요 · ' + stamp(saved.at)));
-    const btn = el('button', 'btn btn-soft', '지난 대화 불러오기');
+    restoreBar.appendChild(el('span', null, '저장 전에 나간 대화 · ' + stamp(saved.at)));
+    const btn = el('button', 'ai-restore-link', '지난 대화 불러오기');
     btn.type = 'button';
     btn.addEventListener('click', () => {
       restoreBar.remove(); restoreBar = null;
