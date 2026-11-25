@@ -8,7 +8,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans+KR:wght@500;600;700&family=Noto+Sans+KR:wght@400;500;700&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=20261125c">
+  <link rel="stylesheet" href="style.css?v=20261125e">
 </head>
 <body class="login-page">
   <header class="login-header">
@@ -56,8 +56,23 @@
           로그인 상태 유지 (최대 30일)
         </label>
       </form>
+
+      <!-- 테스트 계정 (이메일·비밀번호): AI 초안 도우미 체험용, 저장·발행은 안 됨 -->
+      <form class="login-form email-login" data-email-form>
+        <p class="divider"><span>테스트 계정으로 로그인</span></p>
+        <div class="field">
+          <label for="test-email">이메일</label>
+          <input id="test-email" type="email" autocomplete="username" required data-email>
+        </div>
+        <div class="field">
+          <label for="test-pw">비밀번호</label>
+          <input id="test-pw" type="password" autocomplete="current-password" required data-password>
+        </div>
+        <button type="submit" class="btn btn-line" data-email-submit>테스트 계정으로 로그인</button>
+        <p class="error" role="alert" data-email-error hidden></p>
+      </form>
     </section>
   </main>
-  <script type="module" src="main.js?v=20261125c"></script>
+  <script type="module" src="main.js?v=20261125e"></script>
 </body>
 </html>

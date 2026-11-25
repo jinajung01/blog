@@ -678,3 +678,9 @@ button, input, textarea, select { font: inherit; }
 .ai-restore { align-self: center; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 2px 6px; font-size: 12px; color: var(--faint); }
 .ai-restore-link { min-height: 32px; padding: 0 4px; border: 0; background: none; font: inherit; font-size: 12px; font-weight: 700; color: var(--accent); text-decoration: underline; text-underline-offset: 3px; cursor: pointer; }
 .ai-restore-link:hover { color: var(--accent-dark); }
+
+/* 테스트 계정 이메일 로그인 */
+.login-form input[type="email"], .login-form input[type="password"] { height: 48px; padding: 0 14px; border: 1px solid var(--field); border-radius: 8px; font-size: 15px; }
+.email-login { margin-top: 8px; }
+.divider { display: flex; align-items: center; gap: 10px; margin: 0; font-size: 13px; color: var(--faint); }
+.divider::before, .divider::after { content: ''; flex: 1; height: 1px; background: var(--line); }

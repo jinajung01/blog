@@ -1,5 +1,5 @@
 // Firebase 연결: 구글 로그인(관리자 1명), 글·댓글·좋아요·구독 저장
-import { firebaseConfig, ADMIN_UID } from './firebase-config.js?v=20261119a';
+import { firebaseConfig, ADMIN_UID, TESTER_UIDS } from './firebase-config.js?v=20261125e';
 
 const SDK = 'https://www.gstatic.com/firebasejs/10.12.2/';
 const LOGIN_AT = 'blog.loginAt';
@@ -31,6 +31,11 @@ export const store = {
   del(k) { try { localStorage.removeItem(k); } catch (e) {} }
 };
 
+// 테스트 계정: AI 초안 도우미 체험만 가능 (저장은 Firestore 규칙에서도 막힘)
+export function isTester(user) {
+  return !!(user && Array.isArray(TESTER_UIDS) && TESTER_UIDS.includes(user.uid));
+}
+
 export function isAdmin(user) {
   return !!(user && ADMIN_UID && user.uid === ADMIN_UID);
 }
@@ -57,6 +62,16 @@ export async function signInGoogle(keep) {
   const provider = new f.A.GoogleAuthProvider();
   provider.setCustomParameters({ prompt: 'select_account' });
   const res = await f.A.signInWithPopup(f.auth, provider);
+  if (keep) store.set(LOGIN_AT, String(Date.now())); else store.del(LOGIN_AT);
+  return res.user;
+}
+
+// 테스트 계정 로그인 (이메일·비밀번호). 계정은 Firebase 콘솔에서 관리자가 직접 만든다
+export async function signInEmail(email, password, keep) {
+  const f = await fb();
+  if (!f) throw new Error('not-configured');
+  await f.A.setPersistence(f.auth, keep ? f.A.browserLocalPersistence : f.A.browserSessionPersistence);
+  const res = await f.A.signInWithEmailAndPassword(f.auth, email, password);
   if (keep) store.set(LOGIN_AT, String(Date.now())); else store.del(LOGIN_AT);
   return res.user;
 }

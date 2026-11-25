@@ -1,10 +1,10 @@
 // 블로그 화면 동작
 import {
-  configured, adminReady, CATS, isAdmin, currentUser, signInGoogle, signOutNow,
+  configured, adminReady, CATS, isAdmin, isTester, currentUser, signInGoogle, signInEmail, signOutNow,
   listPosts, getPost, savePost, deletePost, hasLiked, toggleLike,
   listComments, addComment, deleteComment, subscribe, store,
   compressImage, renderBody, plainText, fmtDate, readTime, countView, listViews, kstDay
-} from './data.js?v=20261119a';
+} from './data.js?v=20261125e';
 
 const $ = (sel, root) => (root || document).querySelector(sel);
 const $$ = (sel, root) => Array.from((root || document).querySelectorAll(sel));
@@ -38,11 +38,12 @@ const markLink = (a, p, loc) => {
 let user = null;
 try { user = await currentUser(); } catch (e) { console.warn('로그인 확인 실패', e); }
 const admin = isAdmin(user);
+const tester = !admin && isTester(user); // 테스트 계정: 글쓰기 화면의 AI 초안 도우미만 체험
 // 관리자 기기 표시: GA 방문 통계에서 내 방문을 빼기 위함
 if (admin) store.set('blog.isAdmin', '1');
 
 // 헤더 글쓰기 버튼: 관리자면 바로 글쓰기, 아니면 로그인 화면 (AC-01)
-if (admin) $$('[data-write-link]').forEach((a) => { a.href = 'write.html'; });
+if (admin || tester) $$('[data-write-link]').forEach((a) => { a.href = 'write.html'; });
 // 관리자에게만 보이는 메뉴 (조회수)
 if (admin) $$('[data-admin-only]').forEach((a) => { a.hidden = false; });
 
@@ -504,12 +505,12 @@ if (copy) {
   });
 }
 
-// ================= 글쓰기 (관리자만) =================
+// ================= 글쓰기 (관리자만, 테스트 계정은 AI 초안 체험만) =================
 if (document.body.classList.contains('write-page')) {
-  if (!admin) {
+  if (!admin && !tester) {
     location.replace('login.html'); // AC-12
   } else {
-    let postId = params.get('id');
+    let postId = tester ? null : params.get('id'); // 테스트 계정은 기존 글을 열지 않고 새 글로만
     let wasPublished = false;
     let tags = [];
     let cover = '';
@@ -696,6 +697,12 @@ if (document.body.classList.contains('write-page')) {
       showError(big ? '이미지가 너무 커서 저장하지 못했어요. 이미지를 줄이거나 빼 주세요.' : what + '하지 못했어요. 잠시 후 다시 시도해 주세요.');
       console.warn(e);
     };
+
+    // 테스트 계정: AI 초안 도우미 체험만, 저장·발행·삭제는 막음 (Firestore 규칙에서도 막힘)
+    if (tester) {
+      $$('[data-save], [data-publish], [data-write-delete]').forEach((b) => { b.disabled = true; b.title = '테스트 계정은 저장할 수 없어요'; });
+      saveState.textContent = '테스트 계정 · AI 초안 체험만 가능 (저장 안 됨)';
+    }
 
     $('[data-save]').addEventListener('click', async () => { // AC-09
       showError(''); busy(true);
@@ -941,7 +948,13 @@ if (loginForm) {
   const done = $('[data-login-done]');
   const err = $('[data-login-error]');
   const google = $('[data-google]');
-  const showDone = () => { loginForm.hidden = true; done.hidden = false; };
+  const emailForm = $('[data-email-form]');
+  const showDone = () => { loginForm.hidden = true; if (emailForm) emailForm.hidden = true; done.hidden = false; };
+  const showTester = () => {
+    showDone();
+    $('[data-login-done] .notice').textContent = '테스트 계정으로 로그인했어요. 글쓰기 화면에서 AI 초안 도우미를 써 볼 수 있어요. (저장·발행은 안 돼요)';
+    $('[data-login-done] .btn').textContent = 'AI 초안 체험하기';
+  };
   const showUid = (u) => {
     if (adminReady || !u) return;
     $('[data-uid]').textContent = u.uid;
@@ -953,6 +966,8 @@ if (loginForm) {
     google.disabled = true;
   } else if (admin) {
     showDone();
+  } else if (tester) {
+    showTester();
   } else if (user) {
     showUid(user);
   }
@@ -964,6 +979,7 @@ if (loginForm) {
     try {
       const u = await signInGoogle($('[data-keep]').checked); // AC-17
       if (isAdmin(u)) { showDone(); return; } // AC-04
+      if (isTester(u)) { showTester(); google.disabled = false; return; }
       showUid(u);
       await signOutNow();
       err.textContent = '관리자로 등록된 계정이 아니에요.'; // AC-15
@@ -979,4 +995,37 @@ if (loginForm) {
     }
     google.disabled = false;
   });
+
+  // 테스트 계정 로그인 (이메일·비밀번호) — 등록된 테스트 계정 또는 관리자만 통과
+  if (emailForm) {
+    const eErr = $('[data-email-error]');
+    const eBtn = $('[data-email-submit]');
+    if (!configured) eBtn.disabled = true;
+    emailForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      eErr.hidden = true;
+      eBtn.disabled = true;
+      try {
+        const u = await signInEmail($('[data-email]').value.trim(), $('[data-password]').value, $('[data-keep]').checked);
+        $('[data-password]').value = '';
+        if (isAdmin(u)) { showDone(); return; }
+        if (isTester(u)) { showTester(); return; }
+        await signOutNow();
+        eErr.textContent = '테스트 계정으로 등록되지 않은 계정이에요.';
+        eErr.hidden = false;
+      } catch (ex) {
+        const c = ex && ex.code;
+        eErr.textContent = (c === 'auth/invalid-credential' || c === 'auth/wrong-password' || c === 'auth/user-not-found' || c === 'auth/invalid-email')
+          ? '이메일이나 비밀번호가 맞지 않아요.'
+          : c === 'auth/operation-not-allowed'
+            ? '이메일 로그인이 아직 켜져 있지 않아요. (Firebase 콘솔 → Authentication → 로그인 방법)'
+            : c === 'auth/too-many-requests'
+              ? '시도가 너무 많아요. 잠시 후 다시 시도해 주세요.'
+              : '로그인하지 못했어요. 잠시 후 다시 시도해 주세요.';
+        eErr.hidden = false;
+        console.warn(ex);
+      }
+      eBtn.disabled = false;
+    });
+  }
 }

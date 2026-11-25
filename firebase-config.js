@@ -15,6 +15,10 @@ export const firebaseConfig = {
 // (Gemini API 키는 Firebase 콘솔이 관리하므로 코드에 넣지 않습니다)
 export const RECAPTCHA_ENTERPRISE_KEY = '6Lfhni8uAAAAABsE_Mzx4YxVUeBj0I4lh_ue8kDz';
 
+// 테스트 계정 사용자 ID 목록 — 글쓰기 화면의 AI 초안 도우미만 써 볼 수 있고 저장·발행은 못 함.
+// (Firestore 보안 규칙은 관리자만 쓰기 허용이라, 테스트 계정은 규칙에서도 저장이 막힘)
+export const TESTER_UIDS = ['fjM3ZB81EVgnLFXxcW44YX9k9ZU2'];
+
 // 관리자 구글 계정의 사용자 ID(UID) 1개 — 처음 로그인하면 로그인 화면에 표시됩니다.
 // firestore.rules 안의 같은 값도 함께 바꿔야 합니다.
 export const ADMIN_UID = '5O7QPzPsnLUSRNf9fefKpNEYayW2';
